@@ -13,34 +13,39 @@
     <!-- Ignore warning about processor architecture mismatch with PlayMaker ConditionalExpression -->
     <NoWarn>$(NoWarn);MSB3270</NoWarn>
 
-    <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
-    <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
-
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/mich101mich/SaveFileManager</RepositoryUrl>
   </PropertyGroup>
-    <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' ">
-      <Reference Include="0Harmony">                          <HintPath>$(BepInExDllFolder)\0Harmony.dll</HintPath></Reference>
-      <Reference Include="BepInEx">                           <HintPath>$(BepInExDllFolder)\BepInEx.dll</HintPath></Reference>
-      <Reference Include="Assembly-CSharp">                   <HintPath>$(SilksongDllFolder)\Assembly-CSharp.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.SharedUtils">            <HintPath>$(SilksongDllFolder)\TeamCherry.SharedUtils.dll</HintPath></Reference>
-      <Reference Include="UnityEngine">                       <HintPath>$(SilksongDllFolder)\UnityEngine.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.CoreModule">            <HintPath>$(SilksongDllFolder)\UnityEngine.CoreModule.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.InputLegacyModule">     <HintPath>$(SilksongDllFolder)\UnityEngine.InputLegacyModule.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.UI">                    <HintPath>$(SilksongDllFolder)\UnityEngine.UI.dll</HintPath></Reference>
-    </ItemGroup>
 
-    <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' ">
-      <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
-      <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\Assembly-CSharp\Assembly-CSharp.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine\UnityEngine.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
-      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
-    </ItemGroup>
+  <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' And '$(CI)' != 'true' ">
+    <Reference Include="0Harmony">                          <HintPath>$(BepInExDllFolder)\0Harmony.dll</HintPath></Reference>
+    <Reference Include="BepInEx">                           <HintPath>$(BepInExDllFolder)\BepInEx.dll</HintPath></Reference>
+    <Reference Include="Assembly-CSharp">                   <HintPath>$(SilksongDllFolder)\Assembly-CSharp.dll</HintPath></Reference>
+    <Reference Include="TeamCherry.SharedUtils">            <HintPath>$(SilksongDllFolder)\TeamCherry.SharedUtils.dll</HintPath></Reference>
+    <Reference Include="UnityEngine">                       <HintPath>$(SilksongDllFolder)\UnityEngine.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.CoreModule">            <HintPath>$(SilksongDllFolder)\UnityEngine.CoreModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">     <HintPath>$(SilksongDllFolder)\UnityEngine.InputLegacyModule.dll</HintPath></Reference>
+    <Reference Include="UnityEngine.UI">                    <HintPath>$(SilksongDllFolder)\UnityEngine.UI.dll</HintPath></Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' And '$(CI)' != 'true' ">
+    <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
+    <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\Assembly-CSharp\Assembly-CSharp.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine\UnityEngine.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(CI)' == 'true' ">
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="HarmonyX" Version="2.9.0" />
+    <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
+    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Remove="thunderstore/temp;thunderstore/dist" />
