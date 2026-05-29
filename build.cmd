@@ -1,0 +1,1 @@
+dotnet build SaveFileManager.csproj -c Release

@@ -16,51 +16,31 @@
     <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
     <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
 
-    <!-- Shortens and anonymizes paths in debug symbols relative to the project directory. Breakpoints will not work, however. -->
-    <PathMap Condition="'$(Configuration)' == 'Release'">$(MSBuildProjectDirectory)=/</PathMap>
-
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/mich101mich/SaveFileManager</RepositoryUrl>
   </PropertyGroup>
+    <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' ">
+      <Reference Include="0Harmony">                          <HintPath>$(BepInExDllFolder)\0Harmony.dll</HintPath></Reference>
+      <Reference Include="BepInEx">                           <HintPath>$(BepInExDllFolder)\BepInEx.dll</HintPath></Reference>
+      <Reference Include="Assembly-CSharp">                   <HintPath>$(SilksongDllFolder)\Assembly-CSharp.dll</HintPath></Reference>
+      <Reference Include="TeamCherry.SharedUtils">            <HintPath>$(SilksongDllFolder)\TeamCherry.SharedUtils.dll</HintPath></Reference>
+      <Reference Include="UnityEngine">                       <HintPath>$(SilksongDllFolder)\UnityEngine.dll</HintPath></Reference>
+      <Reference Include="UnityEngine.CoreModule">            <HintPath>$(SilksongDllFolder)\UnityEngine.CoreModule.dll</HintPath></Reference>
+      <Reference Include="UnityEngine.InputLegacyModule">     <HintPath>$(SilksongDllFolder)\UnityEngine.InputLegacyModule.dll</HintPath></Reference>
+      <Reference Include="UnityEngine.UI">                    <HintPath>$(SilksongDllFolder)\UnityEngine.UI.dll</HintPath></Reference>
+    </ItemGroup>
 
-  <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' ">
-      <Reference Include="0Harmony">                          <HintPath>$(BepInExDllFolder)/0Harmony.dll</HintPath></Reference>
-      <Reference Include="BepInEx">                           <HintPath>$(BepInExDllFolder)/BepInEx.dll</HintPath></Reference>
-      <Reference Include="Assembly-CSharp">                   <HintPath>$(SilksongDllFolder)/Assembly-CSharp.dll</HintPath></Reference>
-      <Reference Include="Assembly-CSharp-firstpass">         <HintPath>$(SilksongDllFolder)/Assembly-CSharp-firstpass.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.BuildBot">               <HintPath>$(SilksongDllFolder)/TeamCherry.BuildBot.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.Cinematics">             <HintPath>$(SilksongDllFolder)/TeamCherry.Cinematics.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.Localization">           <HintPath>$(SilksongDllFolder)/TeamCherry.Localization.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.NestedFadeGroup">        <HintPath>$(SilksongDllFolder)/TeamCherry.NestedFadeGroup.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.SharedUtils">            <HintPath>$(SilksongDllFolder)/TeamCherry.SharedUtils.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.Splines">                <HintPath>$(SilksongDllFolder)/TeamCherry.Splines.dll</HintPath></Reference>
-      <Reference Include="TeamCherry.TK2D">                   <HintPath>$(SilksongDllFolder)/TeamCherry.TK2D.dll</HintPath></Reference>
-      <Reference Include="UnityEngine">                       <HintPath>$(SilksongDllFolder)/UnityEngine.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.CoreModule">            <HintPath>$(SilksongDllFolder)/UnityEngine.CoreModule.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.InputLegacyModule">     <HintPath>$(SilksongDllFolder)/UnityEngine.InputLegacyModule.dll</HintPath></Reference>
-      <Reference Include="UnityEngine.UI">                    <HintPath>$(SilksongDllFolder)/UnityEngine.UI.dll</HintPath></Reference>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(DesignTimeBuild)' == 'true'">
-  <ItemGroup>
-    <ProjectReference Include="$(SilksongSourceFolder)/Assembly-CSharp/Assembly-CSharp.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/Assembly-CSharp-firstpass/Assembly-CSharp-firstpass.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.BuildBot/TeamCherry.BuildBot.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.Cinematics/TeamCherry.Cinematics.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.Localization/TeamCherry.Localization.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.NestedFadeGroup/TeamCherry.NestedFadeGroup.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.SharedUtils/TeamCherry.SharedUtils.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.Splines/TeamCherry.Splines.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/TeamCherry.TK2D/TeamCherry.TK2D.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/UnityEngine/UnityEngine.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/UnityEngine.CoreModule/UnityEngine.CoreModule.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/UnityEngine.InputLegacyModule/UnityEngine.InputLegacyModule.csproj" />
-    <ProjectReference Include="$(SilksongSourceFolder)/UnityEngine.UI/UnityEngine.UI.csproj" />
-
-    <ProjectReference Include="$(HarmonyXSourceFolder)/Harmony/Harmony.csproj" />
-    <ProjectReference Include="$(BepInExSourceFolder)/BepInEx.Core/BepInEx.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' ">
+      <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
+      <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\Assembly-CSharp\Assembly-CSharp.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine\UnityEngine.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
+      <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
+    </ItemGroup>
 
   <ItemGroup>
     <Folder Remove="thunderstore/temp;thunderstore/dist" />

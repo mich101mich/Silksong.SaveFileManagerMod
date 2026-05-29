@@ -11,7 +11,6 @@ using UnityEngine;
 
 namespace SaveFileManager
 {
-    // TODO - adjust the plugin guid as needed
     [BepInPlugin("io.github.mich101mich.savefilemanager", "Save File Manager", "0.1.0")]
     public partial class SaveFileManagerPlugin : BaseUnityPlugin
     {

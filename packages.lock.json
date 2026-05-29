@@ -2,195 +2,836 @@
   "version": 1,
   "dependencies": {
     ".NETStandard,Version=v2.1": {
-      "Microsoft.Bcl.AsyncInterfaces": {
-        "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "W8DPQjkMScOMTtJbPwmPyj9c3zYSFGawDW3jwlBOOsnY+EzZFLgNQ/UMkK35JmkNOVPdCyPr2Tw7Vv9N+KA3ZQ=="
-      },
-      "Mono.Cecil": {
-        "type": "Transitive",
-        "resolved": "0.11.6",
-        "contentHash": "f33RkDtZO8VlGXCtmQIviOtxgnUdym9xx/b1p9h91CRGOsJFxCFOFK1FDbVt1OCf1aWwYejUFa2MOQyFWTFjbA=="
-      },
-      "MonoMod.Backports": {
-        "type": "Transitive",
-        "resolved": "1.1.2",
-        "contentHash": "baYlNy8n8kmaNhNvqmZ/dIPOeO1r9//dG1i2WbunMWtWZ2EKtIgmXaS+ZzphzTsikkGnoD4Jwr5g0TVdpDjgpw==",
-        "dependencies": {
-          "MonoMod.ILHelpers": "1.1.0",
-          "System.Reflection.Emit.ILGeneration": "4.7.0",
-          "System.Reflection.Emit.Lightweight": "4.7.0"
-        }
-      },
-      "MonoMod.Core": {
-        "type": "Transitive",
-        "resolved": "1.3.4",
-        "contentHash": "yeLEs4Y+hfFjiShKotDYKWiwnADra2kj8pYl66QewdcM/IRPIbjG6wAIVq38Zj9Ry2me33DCwXOHWrTnR7dZ1Q==",
-        "dependencies": {
-          "Mono.Cecil": "0.11.6",
-          "MonoMod.Backports": "1.1.2",
-          "MonoMod.ILHelpers": "1.1.0",
-          "MonoMod.Utils": "25.0.12",
-          "System.Reflection.Emit.ILGeneration": "4.7.0",
-          "System.Reflection.Emit.Lightweight": "4.7.0"
-        }
-      },
-      "MonoMod.ILHelpers": {
-        "type": "Transitive",
-        "resolved": "1.1.0",
-        "contentHash": "L2FWjhTrv7tcIxshfZ+M3OcaNr4cNw0IwiVZEgwqRnZ5QAN3+RrNJ8ZwCzwXUWyPDqooJxMcjjg8PsSYUiNBjQ=="
-      },
-      "MonoMod.RuntimeDetour": {
-        "type": "Transitive",
-        "resolved": "25.3.4",
-        "contentHash": "hzAogPejsFAAWUaa+dFXH2GR2LdLSEAfPfT1sz1wCPXBxHzufbcVo8NkpsrhLEYVIQ0BDb1Xsyv/MqyFShC4bA==",
-        "dependencies": {
-          "Mono.Cecil": "0.11.6",
-          "MonoMod.Backports": "1.1.2",
-          "MonoMod.Core": "1.3.4",
-          "MonoMod.ILHelpers": "1.1.0",
-          "MonoMod.Utils": "25.0.12",
-          "System.Reflection.Emit.ILGeneration": "4.7.0",
-          "System.Reflection.Emit.Lightweight": "4.7.0"
-        }
-      },
-      "MonoMod.Utils": {
-        "type": "Transitive",
-        "resolved": "25.0.12",
-        "contentHash": "8i/uRhkl7vW2DNMmDsIz+D7VaMtv9/jH+m7f4y5Zz3FJGbm15MVSwVfOp/fVV/1Ld6YFxk6jophDNVbAZUKR1Q==",
-        "dependencies": {
-          "Mono.Cecil": "0.11.6",
-          "MonoMod.Backports": "1.1.2",
-          "MonoMod.ILHelpers": "1.1.0",
-          "System.Reflection.Emit.ILGeneration": "4.7.0",
-          "System.Reflection.Emit.Lightweight": "4.7.0"
-        }
-      },
-      "SemanticVersioning": {
-        "type": "Transitive",
-        "resolved": "2.0.2",
-        "contentHash": "4EQgYdNZ92SyaO7YFk6olVnebF5V+jrHyMUjvPq89tLeMo8NSfgDF+6Zwq/lgh9j/0yfQp9Lkm0ZA0rUATCZFA=="
-      },
-      "System.Buffers": {
-        "type": "Transitive",
-        "resolved": "4.5.1",
-        "contentHash": "Rw7ijyl1qqRS0YQD/WycNst8hUUMgrMH4FCn1nNm27M4VxchZ1js3fVjQaANHO5f3sN4isvP4a+Met9Y4YomAg=="
-      },
-      "System.Memory": {
-        "type": "Transitive",
-        "resolved": "4.5.4",
-        "contentHash": "1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw==",
-        "dependencies": {
-          "System.Buffers": "4.5.1",
-          "System.Numerics.Vectors": "4.4.0",
-          "System.Runtime.CompilerServices.Unsafe": "4.5.3"
-        }
-      },
-      "System.Numerics.Vectors": {
-        "type": "Transitive",
-        "resolved": "4.5.0",
-        "contentHash": "QQTlPTl06J/iiDbJCiepZ4H//BVraReU4O4EoRw1U02H5TLUIT7xn3GnDp9AXPSlJUDyFs4uWjWafNX6WrAojQ=="
-      },
-      "System.Reflection.Emit": {
-        "type": "Transitive",
-        "resolved": "4.7.0",
-        "contentHash": "VR4kk8XLKebQ4MZuKuIni/7oh+QGFmZW3qORd1GvBq/8026OpW501SzT/oypwiQl4TvT8ErnReh/NzY9u+C6wQ=="
-      },
-      "System.Reflection.Emit.ILGeneration": {
-        "type": "Transitive",
-        "resolved": "4.7.0",
-        "contentHash": "AucBYo3DSI0IDxdUjKksBcQJXPHyoPyrCXYURW1WDsLI4M65Ar/goSHjdnHOAY9MiYDNKqDlIgaYm+zL2hA1KA=="
-      },
-      "System.Reflection.Emit.Lightweight": {
-        "type": "Transitive",
-        "resolved": "4.7.0",
-        "contentHash": "a4OLB4IITxAXJeV74MDx49Oq2+PsF6Sml54XAFv+2RyWwtDBcabzoxiiJRhdhx+gaohLh4hEGCLQyBozXoQPqA=="
-      },
-      "System.Runtime.CompilerServices.Unsafe": {
-        "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "ZD9TMpsmYJLrxbbmdvhwt9YEgG5WntEnZ/d1eH8JBX9LBp+Ju8BSBhUGbZMNVHHomWo2KVImJhTDl2hIgw/6MA=="
-      },
-      "System.Text.Encodings.Web": {
-        "type": "Transitive",
-        "resolved": "5.0.1",
-        "contentHash": "KmJ+CJXizDofbq6mpqDoRRLcxgOd2z9X3XoFNULSbvbqVRZkFX3istvr+MUjL6Zw1RT+RNdoI4GYidIINtgvqQ=="
-      },
-      "System.Text.Json": {
-        "type": "Transitive",
-        "resolved": "5.0.2",
-        "contentHash": "I47dVIGiV6SfAyppphxqupertT/5oZkYLDCX6vC3HpOI4ZLjyoKAreUoem2ie6G0RbRuFrlqz/PcTQjfb2DOfQ==",
-        "dependencies": {
-          "Microsoft.Bcl.AsyncInterfaces": "5.0.0",
-          "System.Buffers": "4.5.1",
-          "System.Memory": "4.5.4",
-          "System.Numerics.Vectors": "4.5.0",
-          "System.Runtime.CompilerServices.Unsafe": "5.0.0",
-          "System.Text.Encodings.Web": "5.0.1",
-          "System.Threading.Tasks.Extensions": "4.5.4"
-        }
-      },
-      "System.Threading.Tasks.Extensions": {
-        "type": "Transitive",
-        "resolved": "4.5.4",
-        "contentHash": "zteT+G8xuGu6mS+mzDzYXbzS7rd3K6Fjb9RiZlYlJPam2/hU7JCBZBVEcywNuR+oZ1ncTvc/cq0faRr3P01OVg==",
-        "dependencies": {
-          "System.Runtime.CompilerServices.Unsafe": "4.5.3"
-        }
-      },
       "assembly-csharp": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "Assembly-CSharp-firstpass": "[1.0.0, )",
+          "Coffee.SoftMaskForUGUI": "[1.0.0, )",
+          "ConditionalExpression": "[1.0.0, )",
+          "GalaxyCSharp": "[1.0.0, )",
+          "Newtonsoft.Json": "[1.0.0, )",
+          "Newtonsoft.Json.UnityConverters": "[1.0.0, )",
+          "PlayMaker": "[1.0.0, )",
+          "SharpDX.DirectInput": "[1.0.0, )",
+          "TeamCherry.BuildBot": "[1.0.0, )",
+          "TeamCherry.Cinematics": "[1.0.0, )",
+          "TeamCherry.Localization": "[1.0.0, )",
+          "TeamCherry.NestedFadeGroup": "[1.0.0, )",
+          "TeamCherry.SharedUtils": "[1.0.0, )",
+          "TeamCherry.Splines": "[1.0.0, )",
+          "TeamCherry.TK2D": "[1.0.0, )",
+          "Unity.Addressables": "[1.0.0, )",
+          "Unity.InputSystem": "[1.0.0, )",
+          "Unity.ResourceManager": "[1.0.0, )",
+          "UnityEngine.AIModule": "[1.0.0, )",
+          "UnityEngine.AnimationModule": "[1.0.0, )",
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.DirectorModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.ImageConversionModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.ParticleSystemModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.ScreenCaptureModule": "[1.0.0, )",
+          "UnityEngine.SpriteMaskModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )",
+          "UnityEngine.UI": "[1.0.0, )",
+          "UnityEngine.UIElementsModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestTextureModule": "[1.0.0, )",
+          "UnityEngine.VideoModule": "[1.0.0, )",
+          "UnityEngine.WindModule": "[1.0.0, )",
+          "XGamingRuntime": "[1.0.0, )",
+          "com.rlabrecque.steamworks.net": "[1.0.0, )"
+        }
       },
       "assembly-csharp-firstpass": {
+        "type": "Project",
+        "dependencies": {
+          "GalaxyCSharp": "[1.0.0, )",
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.UI": "[1.0.0, )"
+        }
+      },
+      "coffee.softmaskforugui": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.UI": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )"
+        }
+      },
+      "com.rlabrecque.steamworks.net": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )"
+        }
+      },
+      "conditionalexpression": {
+        "type": "Project",
+        "dependencies": {
+          "PlayMaker": "[1.0.0, )",
+          "UnityEngine": "[1.0.0, )"
+        }
+      },
+      "galaxycsharp": {
         "type": "Project"
       },
-      "bepinex.core": {
+      "newtonsoft.json": {
+        "type": "Project"
+      },
+      "newtonsoft.json.unityconverters": {
         "type": "Project",
         "dependencies": {
-          "HarmonyX": "[2.10.2, )",
-          "MonoMod.Utils": "[22.7.31.1, )",
-          "SemanticVersioning": "[2.0.2, )"
+          "Newtonsoft.Json": "[1.0.0, )",
+          "UnityEngine.AIModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )"
         }
       },
-      "HarmonyX": {
+      "playmaker": {
         "type": "Project",
         "dependencies": {
-          "MonoMod.RuntimeDetour": "[25.3.4, )",
-          "System.Reflection.Emit": "[4.7.0, )",
-          "System.Text.Json": "[5.0.2, )"
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
         }
+      },
+      "sharpdx": {
+        "type": "Project"
+      },
+      "sharpdx.directinput": {
+        "type": "Project",
+        "dependencies": {
+          "SharpDX": "[1.0.0, )",
+          "System.Collections": "[1.0.0, )",
+          "System.Globalization": "[1.0.0, )",
+          "System.Reflection": "[1.0.0, )",
+          "System.Runtime.InteropServices": "[1.0.0, )"
+        }
+      },
+      "system.collections": {
+        "type": "Project"
+      },
+      "system.globalization": {
+        "type": "Project"
+      },
+      "system.reflection": {
+        "type": "Project"
+      },
+      "system.runtime.interopservices": {
+        "type": "Project"
       },
       "teamcherry.buildbot": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )"
+        }
       },
       "teamcherry.cinematics": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.VideoModule": "[1.0.0, )"
+        }
       },
       "teamcherry.localization": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "PlayMaker": "[1.0.0, )",
+          "TeamCherry.SharedUtils": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
       },
       "teamcherry.nestedfadegroup": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "PlayMaker": "[1.0.0, )",
+          "TeamCherry.SharedUtils": "[1.0.0, )",
+          "TeamCherry.TK2D": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.ParticleSystemModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )"
+        }
       },
       "teamcherry.sharedutils": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "PlayMaker": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.ParticleSystemModule": "[1.0.0, )"
+        }
       },
       "teamcherry.splines": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "TeamCherry.SharedUtils": "[1.0.0, )",
+          "Unity.Burst": "[1.0.0, )",
+          "Unity.Mathematics": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )"
+        }
       },
       "teamcherry.tk2d": {
+        "type": "Project",
+        "dependencies": {
+          "TeamCherry.SharedUtils": "[1.0.0, )",
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.ImageConversionModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
+      },
+      "unity.addressables": {
+        "type": "Project",
+        "dependencies": {
+          "Unity.ResourceManager": "[1.0.0, )",
+          "UnityEngine.AssetBundleModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestAssetBundleModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
+      },
+      "unity.burst": {
+        "type": "Project",
+        "dependencies": {
+          "Unity.Burst.Unsafe": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )"
+        }
+      },
+      "unity.burst.unsafe": {
         "type": "Project"
+      },
+      "unity.inputsystem": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.InputModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.UI": "[1.0.0, )",
+          "UnityEngine.UIElementsModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )",
+          "UnityEngine.VRModule": "[1.0.0, )",
+          "UnityEngine.XRModule": "[1.0.0, )"
+        }
+      },
+      "unity.mathematics": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )"
+        }
+      },
+      "unity.profiling.core": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )"
+        }
+      },
+      "unity.resourcemanager": {
+        "type": "Project",
+        "dependencies": {
+          "Unity.Profiling.Core": "[1.0.0, )",
+          "UnityEngine.AssetBundleModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestAssetBundleModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
       },
       "unityengine": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AIModule": "[1.0.0, )",
+          "UnityEngine.AMDModule": "[1.0.0, )",
+          "UnityEngine.ARModule": "[1.0.0, )",
+          "UnityEngine.AccessibilityModule": "[1.0.0, )",
+          "UnityEngine.AndroidJNIModule": "[1.0.0, )",
+          "UnityEngine.AnimationModule": "[1.0.0, )",
+          "UnityEngine.AssetBundleModule": "[1.0.0, )",
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.ClothModule": "[1.0.0, )",
+          "UnityEngine.ClusterInputModule": "[1.0.0, )",
+          "UnityEngine.ClusterRendererModule": "[1.0.0, )",
+          "UnityEngine.ContentLoadModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.CrashReportingModule": "[1.0.0, )",
+          "UnityEngine.DSPGraphModule": "[1.0.0, )",
+          "UnityEngine.DirectorModule": "[1.0.0, )",
+          "UnityEngine.GameCenterModule": "[1.0.0, )",
+          "UnityEngine.GridModule": "[1.0.0, )",
+          "UnityEngine.HierarchyCoreModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.ImageConversionModule": "[1.0.0, )",
+          "UnityEngine.InputForUIModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.InputModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.LocalizationModule": "[1.0.0, )",
+          "UnityEngine.MarshallingModule": "[1.0.0, )",
+          "UnityEngine.MultiplayerModule": "[1.0.0, )",
+          "UnityEngine.NVIDIAModule": "[1.0.0, )",
+          "UnityEngine.ParticleSystemModule": "[1.0.0, )",
+          "UnityEngine.PerformanceReportingModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.PropertiesModule": "[1.0.0, )",
+          "UnityEngine.ScreenCaptureModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.SpriteMaskModule": "[1.0.0, )",
+          "UnityEngine.SpriteShapeModule": "[1.0.0, )",
+          "UnityEngine.StreamingModule": "[1.0.0, )",
+          "UnityEngine.SubsystemsModule": "[1.0.0, )",
+          "UnityEngine.TLSModule": "[1.0.0, )",
+          "UnityEngine.TerrainModule": "[1.0.0, )",
+          "UnityEngine.TerrainPhysicsModule": "[1.0.0, )",
+          "UnityEngine.TextCoreFontEngineModule": "[1.0.0, )",
+          "UnityEngine.TextCoreTextEngineModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )",
+          "UnityEngine.TilemapModule": "[1.0.0, )",
+          "UnityEngine.UIElementsModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )",
+          "UnityEngine.UnityAnalyticsCommonModule": "[1.0.0, )",
+          "UnityEngine.UnityAnalyticsModule": "[1.0.0, )",
+          "UnityEngine.UnityConnectModule": "[1.0.0, )",
+          "UnityEngine.UnityCurlModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestAssetBundleModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestAudioModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestTextureModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestWWWModule": "[1.0.0, )",
+          "UnityEngine.VFXModule": "[1.0.0, )",
+          "UnityEngine.VRModule": "[1.0.0, )",
+          "UnityEngine.VehiclesModule": "[1.0.0, )",
+          "UnityEngine.VideoModule": "[1.0.0, )",
+          "UnityEngine.VirtualTexturingModule": "[1.0.0, )",
+          "UnityEngine.WindModule": "[1.0.0, )",
+          "UnityEngine.XRModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.accessibilitymodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.aimodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.amdmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.androidjnimodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.animationmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.armodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.assetbundlemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.audiomodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.clothmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.clusterinputmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.clusterrenderermodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.contentloadmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
       },
       "unityengine.coremodule": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.crashreportingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.directormodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.dspgraphmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.gamecentermodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.gridmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.hierarchycoremodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.imageconversionmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.imguimodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TextCoreTextEngineModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.inputforuimodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
       },
       "unityengine.inputlegacymodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.inputmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.jsonserializemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.localizationmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.marshallingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.multiplayermodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.nvidiamodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.particlesystemmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.performancereportingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.physics2dmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.physicsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.propertiesmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.screencapturemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.sharedinternalsmodule": {
         "type": "Project"
       },
+      "unityengine.spritemaskmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.spriteshapemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.streamingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.subsystemsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.terrainmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.terrainphysicsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TerrainModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.textcorefontenginemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.textcoretextenginemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TextCoreFontEngineModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.textrenderingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.tilemapmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.GridModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.tlsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
       "unityengine.ui": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AnimationModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.Physics2DModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.SpriteShapeModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )",
+          "UnityEngine.TilemapModule": "[1.0.0, )",
+          "UnityEngine.UIElementsModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.uielementsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.HierarchyCoreModule": "[1.0.0, )",
+          "UnityEngine.IMGUIModule": "[1.0.0, )",
+          "UnityEngine.InputForUIModule": "[1.0.0, )",
+          "UnityEngine.InputLegacyModule": "[1.0.0, )",
+          "UnityEngine.JSONSerializeModule": "[1.0.0, )",
+          "UnityEngine.PropertiesModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TextCoreFontEngineModule": "[1.0.0, )",
+          "UnityEngine.TextCoreTextEngineModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )",
+          "UnityEngine.UIModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.uimodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.TextRenderingModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unityanalyticscommonmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unityanalyticsmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.UnityAnalyticsCommonModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unityconnectmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitycurlmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitywebrequestassetbundlemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AssetBundleModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitywebrequestaudiomodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitywebrequestmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitywebrequesttexturemodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.unitywebrequestwwwmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AssetBundleModule": "[1.0.0, )",
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.ImageConversionModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestAssetBundleModule": "[1.0.0, )",
+          "UnityEngine.UnityWebRequestModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.vehiclesmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.vfxmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.videomodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.AudioModule": "[1.0.0, )",
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.virtualtexturingmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.vrmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.windmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )"
+        }
+      },
+      "unityengine.xrmodule": {
+        "type": "Project",
+        "dependencies": {
+          "UnityEngine.CoreModule": "[1.0.0, )",
+          "UnityEngine.PhysicsModule": "[1.0.0, )",
+          "UnityEngine.SharedInternalsModule": "[1.0.0, )",
+          "UnityEngine.SubsystemsModule": "[1.0.0, )"
+        }
+      },
+      "xgamingruntime": {
         "type": "Project"
       }
     }
