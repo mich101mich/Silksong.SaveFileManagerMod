@@ -8,7 +8,7 @@ namespace = "mich101mich"
 description = "Example mod description"
 
 # Replace this with a correct repo URL if the default is not accurate
-websiteUrl = "https://github.com/mich101mich/SaveFileManager"
+websiteUrl = "https://github.com/mich101mich/Silksong.SaveFileManagerMod"
 containsNsfwContent = false
 
 
@@ -36,8 +36,8 @@ target = "/"
 
 [publish]
 repository = "https://thunderstore.io"
-communities = [ "hollow-knight-silksong" ]
+communities = ["hollow-knight-silksong"]
 
 [publish.categories]
 # available categories can be found at https://github.com/thunderstore-io/ecosystem-schema/blob/master/games/data/hollow-knight-silksong.yml
-hollow-knight-silksong = [ "mods" ]
+hollow-knight-silksong = ["mods"]

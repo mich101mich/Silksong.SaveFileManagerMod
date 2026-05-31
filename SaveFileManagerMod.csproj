@@ -1,0 +1,118 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisMode>recommended</AnalysisMode>
+    <!-- Ignore warning about processor architecture mismatch with PlayMaker ConditionalExpression -->
+    <NoWarn>$(NoWarn);MSB3270</NoWarn>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/mich101mich/Silksong.SaveFileManagerMod</RepositoryUrl>
+  </PropertyGroup>
+
+  <!-- 
+    Imports silksong path properties for non-CI builds. The file should be gitignored.
+    If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
+    Required properties are:
+    - SilksongFolder: Path to the root folder of the Silksong installation (the one that contains the BepInEx and Hollow Knight Silksong_Data folders)
+    - SilksongSourceFolder: Path to the (decompiled) source code of Silksong (use ilspycmd on the DLLs in the Hollow Knight Silksong_Data/Managed folder to get this)
+    - BepInExSourceFolder: Path to the (decompiled) source code of BepInEx (use ilspycmd on the DLLs in the BepInEx/core folder to get this)
+  -->
+  <Import Condition="'$(CI)' != 'true'" Project="SilksongPath.props" />
+  <PropertyGroup>
+    <SilksongPluginsFolder>$(SilksongFolder)/BepInEx/plugins</SilksongPluginsFolder>
+    <SilksongScriptsFolder>$(SilksongFolder)/BepInEx/scripts</SilksongScriptsFolder>
+    <SilksongDllFolder>$(SilksongFolder)/Hollow Knight Silksong_Data/Managed</SilksongDllFolder>
+    <BepInExDllFolder>$(SilksongFolder)/BepInEx/core</BepInExDllFolder>
+  </PropertyGroup>
+
+  <!-- For CI builds: Use nuget packages -->
+  <ItemGroup Condition=" '$(CI)' == 'true' ">
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="HarmonyX" Version="2.9.0" />
+    <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
+    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- For non-CI builds: Use DLLs from your local Silksong installation -->
+  <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' And '$(CI)' != 'true' ">
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDllFolder)/0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDllFolder)/BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(SilksongDllFolder)/Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="TeamCherry.SharedUtils">
+      <HintPath>$(SilksongDllFolder)/TeamCherry.SharedUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- For your IDE: Use the decompiled source code as project references to enable features like "Go to definition" -->
+  <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' And '$(CI)' != 'true' ">
+    <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
+    <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\Assembly-CSharp\Assembly-CSharp.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine\UnityEngine.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UIModule\UnityEngine.UIModule.csproj" />
+  </ItemGroup>
+
+  <!-- Shared Dependencies between all configurations -->
+  <ItemGroup>
+    <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.1.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Remove="thunderstore/temp;thunderstore/dist" />
+    <None Include="README.md" Pack="True" PackagePath="README.md" />
+    <None Include="thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
+  </ItemGroup>
+
+  <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
+    <ItemGroup>
+      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
+      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
+    </ItemGroup>
+    <PropertyGroup>
+      <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
+    </PropertyGroup>
+
+    <!-- Local install -->
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongPluginsFolder)/$(AssemblyTitle)/%(Binaries.LocalDir)" Condition="'$(Configuration)' == 'Release' And '$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongScriptsFolder)/" Condition="'$(Configuration)' == 'Debug' And '$(SilksongScriptsFolder)' != '' And Exists('$(SilksongScriptsFolder)')" />
+
+    <!-- Thunderstore packaging -->
+    <!-- <RemoveDir Directories="$(ThunderstoreDir)/temp;$(ThunderstoreDir)/dist" /> -->
+    <!-- <MakeDir Directories="$(ThunderstoreDir)/temp" /> -->
+    <!-- <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" /> -->
+    <!-- <PropertyGroup>
+      <ThunderstorePkgVersion>$([System.String]::Copy($(Version)).Split('-')[0])</ThunderstorePkgVersion>
+    </PropertyGroup> -->
+    <!-- <Exec Command="dotnet tool restore" /> -->
+    <!-- <Exec Command="dotnet tcli build \-\-config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; \-\-package-name &quot;$(AssemblyTitle)&quot; \-\-package-version $(ThunderstorePkgVersion)" StandardOutputImportance="High" StandardErrorImportance="High" /> -->
+  </Target>
+</Project>
