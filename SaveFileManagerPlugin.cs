@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 using BepInEx;
 using BepInEx.Logging;
@@ -34,6 +32,8 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     private Harmony m_harmony = null!;
 
     private Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptions = new();
+    internal ArchiveMenuController ArchiveMenu { get; private set; } = null!;
+
     private readonly Dictionary<int, string> m_customSlotNames = new();
     private readonly List<MockArchiveEntry> m_mockArchiveEntries = new()
     {
@@ -65,6 +65,8 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         s_logger = base.Logger;
         s_logger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
 
+        ArchiveMenu = new ArchiveMenuController(this);
+
 
         m_harmony = new Harmony($"harmony-{Id}");
         m_harmony.PatchAll(typeof(SaveFileManagerPlugin));
@@ -80,6 +82,8 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
             saveSlotOption.Dispose();
         }
         m_saveSlotOptions.Clear();
+
+        ArchiveMenu.Dispose();
 
         s_instance = null!;
     }
