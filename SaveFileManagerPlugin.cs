@@ -1,17 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using UnityEngine;
-using Silksong.ModMenu.Elements;
-using Silksong.ModMenu.Plugin;
-using Silksong.ModMenu.Screens;
-using Silksong.ModMenu.Models;
-using UnityEngine.Events;
 using UnityEngine.UI;
-using GlobalEnums;
 
 using SaveFileManagerMod.UI;
 
@@ -21,11 +15,49 @@ namespace SaveFileManagerMod;
 [BepInDependency(Silksong.ModMenu.ModMenuPlugin.Id)]
 public partial class SaveFileManagerPlugin : BaseUnityPlugin
 {
+    public sealed class MockArchiveEntry
+    {
+        public MockArchiveEntry(string id, string label, string details)
+        {
+            Id = id;
+            Label = label;
+            Details = details;
+        }
+
+        public string Id { get; }
+        public string Label { get; }
+        public string Details { get; }
+    }
+
     public static SaveFileManagerPlugin s_instance { get; private set; } = null!;
     internal static ManualLogSource s_logger { get; private set; } = null!;
     private Harmony m_harmony = null!;
 
     private Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptions = new();
+    private readonly Dictionary<int, string> m_customSlotNames = new();
+    private readonly List<MockArchiveEntry> m_mockArchiveEntries = new()
+    {
+        new MockArchiveEntry("archive-01", "Archive A", "Moss Grotto - 03:21"),
+        new MockArchiveEntry("archive-02", "Archive B", "Citadel - 12:44"),
+        new MockArchiveEntry("archive-03", "Archive C", "Greymoor - 25:08")
+    };
+
+    internal IReadOnlyList<MockArchiveEntry> MockArchiveEntries => m_mockArchiveEntries;
+
+    internal bool TryGetCustomName(int slotIndex, out string customName) =>
+        m_customSlotNames.TryGetValue(slotIndex, out customName!);
+
+    internal void SetCustomName(int slotIndex, string customName)
+    {
+        string normalized = customName.Trim();
+        if (string.IsNullOrEmpty(normalized))
+        {
+            m_customSlotNames.Remove(slotIndex);
+            return;
+        }
+
+        m_customSlotNames[slotIndex] = normalized;
+    }
 
     private void Awake()
     {
@@ -60,5 +92,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         {
             s_instance.m_saveSlotOptions[__instance] = new SaveOptions(__instance);
         }
+
+        s_instance.m_saveSlotOptions[__instance].SyncFromSlotState();
     }
 }
