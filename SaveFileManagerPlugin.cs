@@ -1,82 +1,64 @@
 using System.Collections;
+using System.Collections.Generic;
 
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
+using Silksong.ModMenu.Elements;
+using Silksong.ModMenu.Plugin;
+using Silksong.ModMenu.Screens;
+using Silksong.ModMenu.Models;
+using UnityEngine.Events;
+using UnityEngine.UI;
+using GlobalEnums;
 
-namespace SaveFileManagerMod
+using SaveFileManagerMod.UI;
+
+namespace SaveFileManagerMod;
+
+[BepInAutoPlugin(id: "io.github.mich101mich.savefilemanagermod")]
+[BepInDependency(Silksong.ModMenu.ModMenuPlugin.Id)]
+public partial class SaveFileManagerPlugin : BaseUnityPlugin
 {
-    [BepInAutoPlugin(id: "io.github.mich101mich.savefilemanagermod")]
-    public partial class SaveFileManagerPlugin : BaseUnityPlugin
+    public static SaveFileManagerPlugin s_instance { get; private set; } = null!;
+    internal static ManualLogSource s_logger { get; private set; } = null!;
+    private Harmony m_harmony = null!;
+
+    private Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptions = new();
+
+    private void Awake()
     {
-        public static SaveFileManagerPlugin s_instance { get; private set; } = null!;
-        internal static ManualLogSource s_logger { get; private set; } = null!;
-        private Harmony m_harmony = null!;
-        private GameObject m_canvas = null!;
+        s_instance = this;
+        s_logger = base.Logger;
+        s_logger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
 
-        private void Awake()
+
+        m_harmony = new Harmony($"harmony-{Id}");
+        m_harmony.PatchAll(typeof(SaveFileManagerPlugin));
+    }
+
+    private void OnDestroy()
+    {
+        s_logger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
+        m_harmony.UnpatchSelf();
+
+        foreach (var saveSlotOption in m_saveSlotOptions.Values)
         {
-            s_instance = this;
-            s_logger = base.Logger;
-            s_logger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
-
-
-            m_harmony = new Harmony($"harmony-{Id}");
-            m_harmony.PatchAll(typeof(SaveFileManagerPlugin));
-
-            m_canvas = new GameObject("SaveFileManagerModCanvas");
-            m_canvas.SetActive(false);
-
-            m_canvas.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            // m_canvas.AddComponent<GraphicRaycaster>();
-
-            RectTransform rt = m_canvas.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = Vector2.zero;
-            rt.pivot = Vector2.zero;
-            rt.sizeDelta = new Vector2(Screen.width, Screen.height);
-
-            DontDestroyOnLoad(m_canvas);
+            saveSlotOption.Dispose();
         }
+        m_saveSlotOptions.Clear();
 
-        private void OnDestroy()
+        s_instance = null!;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(SaveSlotButton), "ShowRelevantModeForSaveFileState")]
+    public static void SaveSlotButton_ShowRelevantModeForSaveFileState_Prefix(SaveSlotButton __instance)
+    {
+        if (!s_instance.m_saveSlotOptions.ContainsKey(__instance))
         {
-            s_logger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
-            m_harmony.UnpatchSelf();
-            m_canvas.SetActive(false);
-            s_instance = null!;
-        }
-
-        public void Update()
-        {
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(CurrencyManager), "AddShards")]
-        public static void AddShards_Postfix(int amount)
-        {
-            s_logger.LogInfo($"Added {amount} shards");
-            // CurrencyManager.ChangeCurrency(amount, CurrencyType.Shard);
-            // CurrencyManager.ChangeCurrency(amount * 2, CurrencyType.Money);
-        }
-
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(UIManager), "UIGoToProfileMenu")]
-        public static void UIGoToProfileMenu_Postfix()
-        {
-            s_logger.LogInfo("Navigated to profile menu!");
-
-            // Add a white rectangle in the center of the screen
-            var rect = new GameObject("TestRect");
-            rect.AddComponent<CanvasRenderer>();
-            var rectTransform = rect.AddComponent<RectTransform>();
-            rectTransform.SetParent(s_instance.m_canvas.transform, false);
-
-            rectTransform.sizeDelta = new UnityEngine.Vector2(200, 100);
-            var image = rect.AddComponent<UnityEngine.UI.Image>();
-            image.color = UnityEngine.Color.white;
-
-            s_instance.m_canvas.SetActive(true);
+            s_instance.m_saveSlotOptions[__instance] = new SaveOptions(__instance);
         }
     }
 }

@@ -20,6 +20,7 @@
     - SilksongFolder: Path to the root folder of the Silksong installation (the one that contains the BepInEx and Hollow Knight Silksong_Data folders)
     - SilksongSourceFolder: Path to the (decompiled) source code of Silksong (use ilspycmd on the DLLs in the Hollow Knight Silksong_Data/Managed folder to get this)
     - BepInExSourceFolder: Path to the (decompiled) source code of BepInEx (use ilspycmd on the DLLs in the BepInEx/core folder to get this)
+    - ThirdPartySourceFolder: Path to the source code of third-party mods (either from GitHub or from decompiled BepInEx/plugins DLLs)
   -->
   <Import Condition="'$(CI)' != 'true'" Project="SilksongPath.props" />
   <PropertyGroup>
@@ -27,6 +28,7 @@
     <SilksongScriptsFolder>$(SilksongFolder)/BepInEx/scripts</SilksongScriptsFolder>
     <SilksongDllFolder>$(SilksongFolder)/Hollow Knight Silksong_Data/Managed</SilksongDllFolder>
     <BepInExDllFolder>$(SilksongFolder)/BepInEx/core</BepInExDllFolder>
+    <BepInExPluginsFolder>$(SilksongFolder)/BepInEx/plugins</BepInExPluginsFolder>
   </PropertyGroup>
 
   <!-- For CI builds: Use nuget packages -->
@@ -35,6 +37,7 @@
     <PackageReference Include="HarmonyX" Version="2.9.0" />
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
     <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
+    <PackageReference Include="Silksong.ModMenu" Version="*-*" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- For non-CI builds: Use DLLs from your local Silksong installation -->
@@ -66,6 +69,9 @@
     <Reference Include="UnityEngine.UIModule">
       <HintPath>$(SilksongDllFolder)/UnityEngine.UIModule.dll</HintPath>
     </Reference>
+    <Reference Include="Silksong.ModMenu">
+      <HintPath>$(BepInExPluginsFolder)/ModMenu/Silksong.ModMenu.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <!-- For your IDE: Use the decompiled source code as project references to enable features like "Go to definition" -->
@@ -79,6 +85,7 @@
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UIModule\UnityEngine.UIModule.csproj" />
+    <ProjectReference Include="$(ThirdPartySourceFolder)\ModMenu\Silksong.ModMenu\Silksong.ModMenu.csproj" />
   </ItemGroup>
 
   <!-- Shared Dependencies between all configurations -->
