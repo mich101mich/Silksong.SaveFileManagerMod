@@ -69,6 +69,9 @@
     <Reference Include="UnityEngine.UIModule">
       <HintPath>$(SilksongDllFolder)/UnityEngine.UIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(SilksongDllFolder)/UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
     <Reference Include="Silksong.ModMenu">
       <HintPath>$(BepInExPluginsFolder)/ModMenu/Silksong.ModMenu.dll</HintPath>
     </Reference>
@@ -85,6 +88,7 @@
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.InputLegacyModule\UnityEngine.InputLegacyModule.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UI\UnityEngine.UI.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UIModule\UnityEngine.UIModule.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.AnimationModule\UnityEngine.AnimationModule.csproj" />
     <ProjectReference Include="$(ThirdPartySourceFolder)\ModMenu\Silksong.ModMenu\Silksong.ModMenu.csproj" />
   </ItemGroup>
 

@@ -17,8 +17,8 @@ public sealed class SaveSlotActionRow : IDisposable
     private readonly Navigation m_originalRestoreNav;
     private readonly Navigation m_originalClearNav;
 
-    private readonly MenuButton m_renameButton;
-    private readonly MenuButton m_archiveButton;
+    private readonly SaveSlotActionButton m_renameButton;
+    private readonly SaveSlotActionButton m_archiveButton;
 
     private bool m_canRename;
     private bool m_canArchive;
@@ -119,41 +119,40 @@ public sealed class SaveSlotActionRow : IDisposable
         m_archiveButton.interactable = m_canArchive && interactable;
     }
 
-    private MenuButton CloneIconButton(string name, Action onSubmit)
+    private SaveSlotActionButton CloneIconButton(string name, Action onSubmit)
     {
         GameObject template = m_slot.clearSaveButton.gameObject;
         GameObject root = UnityEngine.Object.Instantiate(template, template.transform.parent);
         root.name = name;
 
-        MenuButton templateButton = root.GetComponent<MenuButton>()
-            ?? throw new Exception($"Could not find MenuButton on {name}");
+        // Note that a GameObject can only have one Selectable component, so we need to delete the ClearSaveButton
+        // before adding the SaveSlotActionButton. This means we have to manually store and copy all relevant properties.
+        ClearSaveButton original = root.GetComponent<ClearSaveButton>()
+            ?? throw new Exception($"Could not find MenuButton on {root.name}");
 
-        MenuButton actionButton = ConvertToActionButton(root, templateButton);
-        EnsureSubmitEvent(actionButton);
-        actionButton.OnSubmitPressed.RemoveAllListeners();
-        actionButton.OnSubmitPressed.AddListener(() => onSubmit());
-        actionButton.buttonType = MenuButton.MenuButtonType.Activate;
+        var navigation = original.navigation;
+        var interactable = original.interactable;
+        var transition = original.transition;
+        var targetGraphic = original.targetGraphic;
+        var colors = original.colors;
+        var spriteState = original.spriteState;
 
-        return actionButton;
-    }
+        var cancelAction = original.cancelAction;
+        var playSubmitSound = original.playSubmitSound;
+        var menuSubmitVibration = original.menuSubmitVibration;
+        var menuCancelVibration = original.menuCancelVibration;
 
-    private static MenuButton ConvertToActionButton(GameObject root, MenuButton original)
-    {
-        Navigation navigation = original.navigation;
-        bool interactable = original.interactable;
-        Selectable.Transition transition = original.transition;
-        Graphic? targetGraphic = original.targetGraphic;
-        ColorBlock colors = original.colors;
-        SpriteState spriteState = original.spriteState;
+        var leftCursor = original.leftCursor;
+        var rightCursor = original.rightCursor;
 
-        CancelAction cancelAction = original.cancelAction;
-        bool playSubmitSound = original.playSubmitSound;
-        VibrationDataAsset? menuSubmitVibration = original.menuSubmitVibration;
-        VibrationDataAsset? menuCancelVibration = original.menuCancelVibration;
+        var selectIcon = typeof(ClearSaveButton)
+            .GetField("selectIcon", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetValue(original) as Animator
+            ?? throw new Exception($"Could not find select icon on {original.name}");
 
         UnityEngine.Object.DestroyImmediate(original);
 
-        SfmActionIconButton replacement = root.AddComponent<SfmActionIconButton>();
+        SaveSlotActionButton replacement = root.AddComponent<SaveSlotActionButton>();
         replacement.navigation = navigation;
         replacement.interactable = interactable;
         replacement.transition = transition;
@@ -166,8 +165,13 @@ public sealed class SaveSlotActionRow : IDisposable
         replacement.menuSubmitVibration = menuSubmitVibration;
         replacement.menuCancelVibration = menuCancelVibration;
 
-        EnsureSubmitEvent(replacement);
-        replacement.OnSubmitPressed.RemoveAllListeners();
+        replacement.leftCursor = leftCursor;
+        replacement.rightCursor = rightCursor;
+        replacement.selectIcon = selectIcon;
+
+        // unique properties
+        replacement.onSubmit = onSubmit;
+        replacement.buttonType = MenuButton.MenuButtonType.Activate;
 
         return replacement;
     }
@@ -275,8 +279,13 @@ public sealed class SaveSlotActionRow : IDisposable
             && selectable.IsActive()
             && selectable.IsInteractable();
     }
+}
 
-    private sealed class SfmActionIconButton : MenuButton
+public static class MyUnityExtensions
+{
+    public static GameObject? FindChild(this GameObject obj, string path)
     {
+        Transform transform = obj.transform.Find(path);
+        return transform != null ? transform.gameObject : null;
     }
 }
