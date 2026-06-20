@@ -11,15 +11,14 @@ namespace SaveFileManagerMod.UI;
 public sealed class SaveSlotActionRow : IDisposable
 {
     private readonly SaveSlotButton m_slot;
-    private readonly CanvasGroup m_clearCanvasGroup;
-    private readonly Selectable m_clearSelectable;
-    private readonly Selectable? m_restoreSelectable;
+    private readonly RestoreSaveButton m_restoreButton;
+    private readonly ClearSaveButton m_clearButton;
+    private readonly CanvasGroup m_clearButtonCanvasGroup;
+    private readonly Navigation m_originalRestoreNav;
+    private readonly Navigation m_originalClearNav;
 
     private readonly MenuButton m_renameButton;
     private readonly MenuButton m_archiveButton;
-
-    private readonly GameObject m_renameRoot;
-    private readonly GameObject m_archiveRoot;
 
     private bool m_canRename;
     private bool m_canArchive;
@@ -29,20 +28,27 @@ public sealed class SaveSlotActionRow : IDisposable
     public SaveSlotActionRow(SaveSlotButton slot, Action onRename, Action onArchive)
     {
         m_slot = slot;
-        m_clearCanvasGroup = m_slot.clearSaveButton;
 
-        m_clearSelectable = m_slot.clearSaveButton.GetComponent<Selectable>()
-            ?? throw new Exception("Could not find clear save selectable");
-
-        m_restoreSelectable = typeof(SaveSlotButton)
+        m_restoreButton = typeof(SaveSlotButton)
             .GetField("restoreSaveButton", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .GetValue(m_slot) as Selectable;
+            .GetValue(m_slot) as RestoreSaveButton
+            ?? throw new Exception("Could not find restore save button component");
 
-        (m_renameRoot, m_renameButton) = CloneIconButton("SFM-RenameIcon", onRename);
-        (m_archiveRoot, m_archiveButton) = CloneIconButton("SFM-ArchiveIcon", onArchive);
+        m_originalRestoreNav = m_restoreButton.navigation;
 
-        m_renameRoot.SetActive(value: false);
-        m_archiveRoot.SetActive(value: false);
+        m_clearButton = m_slot.clearSaveButton.GetComponent<ClearSaveButton>()
+            ?? throw new Exception("Could not find clear save button component");
+
+        m_clearButtonCanvasGroup = m_clearButton.GetComponent<CanvasGroup>()
+            ?? throw new Exception("Could not find CanvasGroup on clear save button");
+
+        m_originalClearNav = m_clearButton.navigation;
+
+        m_renameButton = CloneIconButton("SFM-RenameIcon", onRename);
+        m_archiveButton = CloneIconButton("SFM-ArchiveIcon", onArchive);
+
+        m_renameButton.gameObject.SetActive(false);
+        m_archiveButton.gameObject.SetActive(false);
     }
 
     public void Dispose()
@@ -54,14 +60,25 @@ public sealed class SaveSlotActionRow : IDisposable
 
         m_disposed = true;
 
-        if (m_renameRoot != null)
+        if (m_renameButton != null)
         {
-            UnityEngine.Object.Destroy(m_renameRoot);
+            UnityEngine.Object.Destroy(m_renameButton.gameObject);
         }
 
-        if (m_archiveRoot != null)
+        if (m_archiveButton != null)
         {
-            UnityEngine.Object.Destroy(m_archiveRoot);
+            UnityEngine.Object.Destroy(m_archiveButton.gameObject);
+        }
+
+        if (m_restoreButton != null)
+        {
+            m_restoreButton.navigation = m_originalRestoreNav;
+            m_restoreButton.transform.SetLocalPositionX(-67f);
+        }
+        if (m_clearButton != null)
+        {
+            m_clearButton.navigation = m_originalClearNav;
+            m_clearButton.transform.SetLocalPositionX(67f);
         }
     }
 
@@ -70,8 +87,8 @@ public sealed class SaveSlotActionRow : IDisposable
         m_canRename = canRename;
         m_canArchive = canArchive;
 
-        m_renameRoot.SetActive(canRename);
-        m_archiveRoot.SetActive(canArchive);
+        m_renameButton.gameObject.SetActive(canRename);
+        m_archiveButton.gameObject.SetActive(canArchive);
 
         SyncCanvasGroupState();
         ApplyInteractableState();
@@ -97,12 +114,12 @@ public sealed class SaveSlotActionRow : IDisposable
 
     private void ApplyInteractableState()
     {
-        bool interactable = m_customButtonsInteractable && m_clearCanvasGroup.interactable;
+        bool interactable = m_customButtonsInteractable && m_clearButton.interactable;
         m_renameButton.interactable = m_canRename && interactable;
         m_archiveButton.interactable = m_canArchive && interactable;
     }
 
-    private (GameObject root, MenuButton button) CloneIconButton(string name, Action onSubmit)
+    private MenuButton CloneIconButton(string name, Action onSubmit)
     {
         GameObject template = m_slot.clearSaveButton.gameObject;
         GameObject root = UnityEngine.Object.Instantiate(template, template.transform.parent);
@@ -117,7 +134,7 @@ public sealed class SaveSlotActionRow : IDisposable
         actionButton.OnSubmitPressed.AddListener(() => onSubmit());
         actionButton.buttonType = MenuButton.MenuButtonType.Activate;
 
-        return (root, actionButton);
+        return actionButton;
     }
 
     private static MenuButton ConvertToActionButton(GameObject root, MenuButton original)
@@ -167,55 +184,50 @@ public sealed class SaveSlotActionRow : IDisposable
 
     private void SyncCanvasGroupState()
     {
-        ApplyCanvasGroupState(m_renameRoot, m_clearCanvasGroup);
-        ApplyCanvasGroupState(m_archiveRoot, m_clearCanvasGroup);
+        ApplyCanvasGroupState(m_renameButton.gameObject);
+        ApplyCanvasGroupState(m_archiveButton.gameObject);
     }
 
-    private static void ApplyCanvasGroupState(GameObject root, CanvasGroup source)
+    private void ApplyCanvasGroupState(GameObject root)
     {
         if (!root.TryGetComponent(out CanvasGroup target))
         {
             return;
         }
 
-        target.alpha = source.alpha;
-        target.interactable = source.interactable;
-        target.blocksRaycasts = source.blocksRaycasts;
+        target.alpha = m_clearButtonCanvasGroup.alpha;
+        target.interactable = m_clearButtonCanvasGroup.interactable;
+        target.blocksRaycasts = m_clearButtonCanvasGroup.blocksRaycasts;
     }
 
     private void UpdateLayout()
     {
-        if (m_slot.clearSaveButton.transform is not RectTransform clearRect)
+        List<RectTransform> rects = new();
+        if (m_restoreButton?.transform is RectTransform restoreRect)
         {
-            return;
+            rects.Add(restoreRect);
+        }
+        if (m_renameButton?.transform is RectTransform renameRect)
+        {
+            rects.Add(renameRect);
+        }
+        if (m_archiveButton?.transform is RectTransform archiveRect)
+        {
+            rects.Add(archiveRect);
+        }
+        if (m_clearButton?.transform is RectTransform clearRect)
+        {
+            rects.Add(clearRect);
         }
 
-        float spacing = 120f;
-        if (m_restoreSelectable?.transform is RectTransform restoreRect)
-        {
-            spacing = Mathf.Abs(clearRect.anchoredPosition.x - restoreRect.anchoredPosition.x);
-            if (spacing < 32f)
-            {
-                spacing = 120f;
-            }
-        }
+        float spacing = 134f;
+        float totalWidth = (rects.Count - 1) * spacing;
+        float x = -totalWidth / 2f;
 
-        Vector2 basePos = clearRect.anchoredPosition;
-
-        if (m_renameRoot.transform is RectTransform renameRect)
+        foreach (RectTransform rect in rects)
         {
-            renameRect.anchorMin = clearRect.anchorMin;
-            renameRect.anchorMax = clearRect.anchorMax;
-            renameRect.pivot = clearRect.pivot;
-            renameRect.anchoredPosition = new Vector2(basePos.x + spacing, basePos.y);
-        }
-
-        if (m_archiveRoot.transform is RectTransform archiveRect)
-        {
-            archiveRect.anchorMin = clearRect.anchorMin;
-            archiveRect.anchorMax = clearRect.anchorMax;
-            archiveRect.pivot = clearRect.pivot;
-            archiveRect.anchoredPosition = new Vector2(basePos.x + (spacing * 2f), basePos.y);
+            rect.SetLocalPositionX(x);
+            x += spacing;
         }
     }
 
@@ -223,24 +235,21 @@ public sealed class SaveSlotActionRow : IDisposable
     {
         List<Selectable> row = new();
 
-        if (IsUsable(m_restoreSelectable))
+        if (IsUsable(m_restoreButton))
         {
-            row.Add(m_restoreSelectable!);
+            row.Add(m_restoreButton);
         }
-
-        if (IsUsable(m_clearSelectable))
-        {
-            row.Add(m_clearSelectable);
-        }
-
         if (m_canRename && IsUsable(m_renameButton))
         {
             row.Add(m_renameButton);
         }
-
         if (m_canArchive && IsUsable(m_archiveButton))
         {
             row.Add(m_archiveButton);
+        }
+        if (IsUsable(m_clearButton))
+        {
+            row.Add(m_clearButton);
         }
 
         if (row.Count == 0)
@@ -250,17 +259,13 @@ public sealed class SaveSlotActionRow : IDisposable
 
         for (int i = 0; i < row.Count; i++)
         {
-            Selectable current = row[i];
-            Selectable left = i > 0 ? row[i - 1] : current;
-            Selectable right = i < row.Count - 1 ? row[i + 1] : current;
-
-            Navigation nav = current.navigation;
+            Navigation nav = row[i].navigation;
             nav.mode = Navigation.Mode.Explicit;
             nav.selectOnUp = m_slot;
             nav.selectOnDown = m_slot.backButton;
-            nav.selectOnLeft = left;
-            nav.selectOnRight = right;
-            current.navigation = nav;
+            nav.selectOnLeft = i > 0 ? row[i - 1] : m_originalRestoreNav.selectOnLeft;
+            nav.selectOnRight = i + 1 < row.Count ? row[i + 1] : m_originalClearNav.selectOnRight;
+            row[i].navigation = nav;
         }
     }
 
