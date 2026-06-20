@@ -2,6 +2,7 @@ using BepInEx.Logging;
 using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Models;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -10,8 +11,6 @@ namespace SaveFileManagerMod.UI;
 
 public sealed class SaveOptions : IDisposable
 {
-    internal static ManualLogSource s_logger => SaveFileManagerPlugin.s_logger;
-
     private readonly SaveSlotButton m_saveSlotButton;
     private readonly InputHandler m_inputHandler;
 
@@ -29,16 +28,15 @@ public sealed class SaveOptions : IDisposable
     private readonly SaveOptionsUpdater m_updater;
 
     private bool m_renamePanelOpen;
-    private bool m_canRename;
     private bool m_isDisposed;
 
     public SaveOptions(SaveSlotButton button)
     {
         m_saveSlotButton = button;
         m_inputHandler = GameManager.instance.inputHandler;
-        m_archiveMenu = SaveFileManagerPlugin.s_instance.ArchiveMenu;
+        m_archiveMenu = SaveFileManagerPlugin.s_instance.m_archiveMenu;
 
-        s_logger.LogInfo($"Creating SaveOptions for {button.name}");
+        SfmLogger.LogInfo($"Creating SaveOptions for {button.name}");
 
         m_actionRow = new SaveSlotActionRow(m_saveSlotButton, OpenRenamePanel, OpenArchiveMenu);
 
@@ -57,8 +55,6 @@ public sealed class SaveOptions : IDisposable
 
         m_updater = m_saveSlotButton.gameObject.AddComponent<SaveOptionsUpdater>();
         m_updater.Initialize(this);
-
-        SyncFromSlotState();
     }
 
     public void Dispose()
@@ -69,7 +65,7 @@ public sealed class SaveOptions : IDisposable
         }
 
         m_isDisposed = true;
-        s_logger.LogInfo($"Disposing SaveOptions for {m_saveSlotButton.name}");
+        SfmLogger.LogInfo($"Disposing SaveOptions for {m_saveSlotButton.name}");
 
         m_updater.ClearOwner();
 
@@ -95,6 +91,11 @@ public sealed class SaveOptions : IDisposable
         }
     }
 
+    public void SetupNavigation(SaveOptions? previousOptions, SaveOptions? nextOptions)
+    {
+        m_actionRow.SetupNavigation(previousOptions?.m_actionRow, nextOptions?.m_actionRow);
+    }
+
     public void Tick()
     {
         if (m_isDisposed)
@@ -115,42 +116,14 @@ public sealed class SaveOptions : IDisposable
 
     public void SyncFromSlotState()
     {
-        if (m_isDisposed || m_saveSlotButton == null || !m_saveSlotButton.gameObject.activeInHierarchy)
+        if (m_isDisposed)
         {
             return;
         }
 
-        SaveSlotButton.SaveFileStates saveFileState = m_saveSlotButton.saveFileState;
-        SaveSlotButton.SlotState slotState = m_saveSlotButton.State;
-
-        bool hasValidSave = saveFileState == SaveSlotButton.SaveFileStates.LoadedStats;
-        bool hasAnySave = hasValidSave
-            || saveFileState == SaveSlotButton.SaveFileStates.Corrupted
-            || saveFileState == SaveSlotButton.SaveFileStates.Incompatible;
-
-        bool blockedState = slotState == SaveSlotButton.SlotState.Hidden
-            || slotState == SaveSlotButton.SlotState.OperationInProgress
-            || slotState == SaveSlotButton.SlotState.ClearPrompt
-            || slotState == SaveSlotButton.SlotState.ClearConfirm
-            || slotState == SaveSlotButton.SlotState.RestoreSave
-            || slotState == SaveSlotButton.SlotState.BlackThreadInfected;
-
-        bool showRow = !blockedState;
-        bool canRename = showRow && hasValidSave;
-        bool canArchive = showRow && (hasAnySave || saveFileState == SaveSlotButton.SaveFileStates.Empty);
-
-        m_canRename = canRename;
-
-        if (!canRename && m_renamePanelOpen)
-        {
-            CloseRenamePanel(restoreSelection: false);
-        }
-
-        m_actionRow.SetAvailability(canRename, canArchive);
-        m_actionRow.SetCustomButtonsInteractable(!m_renamePanelOpen);
         m_actionRow.Refresh();
 
-        if (hasValidSave && SaveFileManagerPlugin.s_instance.TryGetCustomName(m_saveSlotButton.SaveSlotIndex, out string customName))
+        if (SaveFileManagerPlugin.s_instance.TryGetCustomName(m_saveSlotButton.SaveSlotIndex, out string customName))
         {
             m_customNameLabel.text = customName;
             m_customNameLabel.gameObject.SetActive(value: true);
@@ -164,7 +137,7 @@ public sealed class SaveOptions : IDisposable
 
     private void OpenRenamePanel()
     {
-        if (!m_canRename || m_renamePanelOpen || m_archiveMenu.IsOpen)
+        if (m_renamePanelOpen || m_archiveMenu.IsOpen)
         {
             return;
         }
@@ -180,7 +153,6 @@ public sealed class SaveOptions : IDisposable
 
         m_renamePanelOpen = true;
         SetRenamePanelVisible(visible: true);
-        m_actionRow.SetCustomButtonsInteractable(interactable: false);
         SetRenamePanelNavigation();
         FocusGameObject(m_renameInput.SelectableComponent.gameObject);
         m_renameInput.InputField.ActivateInputField();
@@ -199,7 +171,6 @@ public sealed class SaveOptions : IDisposable
     private void SaveRename()
     {
         SaveFileManagerPlugin.s_instance.SetCustomName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
-        SyncFromSlotState();
         CloseRenamePanel(restoreSelection: true);
     }
 
@@ -212,7 +183,6 @@ public sealed class SaveOptions : IDisposable
 
         m_renamePanelOpen = false;
         SetRenamePanelVisible(visible: false);
-        m_actionRow.SetCustomButtonsInteractable(interactable: true);
 
         if (restoreSelection)
         {

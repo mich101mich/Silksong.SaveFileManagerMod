@@ -8,9 +8,9 @@ namespace SaveFileManagerMod.UI;
 
 public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHandler, IPointerClickHandler, ISelectHandler
 {
-	public Animator selectIcon;
+	public Animator? selectIcon;
 
-	public Action onSubmit;
+	public Action? onSubmit;
 
 	private static readonly int _isSelectedProp = Animator.StringToHash("Is Selected");
 
@@ -32,7 +32,7 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 
 	private void Navigate(AxisEventData eventData, Selectable sel)
 	{
-		if (!(sel != null))
+		if (sel == null)
 		{
 			return;
 		}
