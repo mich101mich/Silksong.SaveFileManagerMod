@@ -45,8 +45,8 @@ public sealed class SaveSlotActionRow : IDisposable
 
         m_originalClearNav = m_clearButton.navigation;
 
-        m_renameButton = CloneIconButton("SFM-RenameIcon", onRename);
-        m_archiveButton = CloneIconButton("SFM-ArchiveIcon", onArchive);
+        m_renameButton = CloneIconButton("SFM-RenameButton", onRename);
+        m_archiveButton = CloneIconButton("SFM-ArchiveButton", onArchive);
 
         m_renameButtonCanvasGroup = m_renameButton.gameObject.GetComponent<CanvasGroup>()!;
         m_archiveButtonCanvasGroup = m_archiveButton.gameObject.GetComponent<CanvasGroup>()!;
@@ -92,8 +92,6 @@ public sealed class SaveSlotActionRow : IDisposable
         {
             return;
         }
-
-        // SfmLogger.LogInfo($"Updating button states for {m_slot.name}. Current slot state: {m_slot.State}");
 
         // See SaveSlotButton.AnimateToSlotState() for reference
         bool isBlocked = false;
@@ -149,9 +147,6 @@ public sealed class SaveSlotActionRow : IDisposable
 
         m_renameButtonCanvasGroup.interactable = m_canRename;
         m_archiveButtonCanvasGroup.interactable = m_canArchive;
-
-        // m_renameButtonCanvasGroup.alpha = m_canRename ? 1f : 0f;
-        // m_archiveButtonCanvasGroup.alpha = m_canArchive ? 1f : 0f;
 
         UpdateLayout();
     }
@@ -269,15 +264,6 @@ public sealed class SaveSlotActionRow : IDisposable
             m_archiveButton,
             m_clearButton,
         };
-        List<Selectable?> neighbors = new()
-        {
-            previousRow?.m_clearButton,
-            m_restoreButton,
-            m_renameButton,
-            m_archiveButton,
-            m_clearButton,
-            nextRow?.m_restoreButton
-        };
 
         for (int i = 0; i < 4; i++)
         {
@@ -285,16 +271,22 @@ public sealed class SaveSlotActionRow : IDisposable
             nav.mode = Navigation.Mode.Explicit;
             nav.selectOnUp = m_slot;
             nav.selectOnDown = m_slot.backButton;
-            nav.selectOnLeft = neighbors[1 + (i - 1)];
-            nav.selectOnRight = neighbors[1 + (i + 1)];
+            nav.selectOnLeft = i > 0 ? row[i - 1] : previousRow?.m_clearButton;
+            nav.selectOnRight = i < 3 ? row[i + 1] : nextRow?.m_restoreButton;
             row[i].navigation = nav;
         }
-        foreach (var field in new[] { "noNav", "fullSlotNav", "emptySlotNav", "defeatedSlotNav" })
+
+        // Update the various navigation fields on SaveSlotButton to point to the archive button.
+        // By default, empty goes to the back button, and defeated to the clear button.
+        // We point all to the archive button since that is the most available action.
+        foreach (var field in new[] { "fullSlotNav", "emptySlotNav", "defeatedSlotNav" })
         {
             var fieldInfo = typeof(SaveSlotButton)
                 .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)!;
 
             var nav = (Navigation)fieldInfo.GetValue(m_slot)!;
+            nav.selectOnDown = m_archiveButton;
+            fieldInfo.SetValue(m_slot, nav);
         }
     }
 

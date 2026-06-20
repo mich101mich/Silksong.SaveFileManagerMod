@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 using SaveFileManagerMod.UI;
@@ -126,5 +127,60 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
 
         s_instance = null!;
         SfmLogger._logger = null;
+    }
+
+    // Patch: Team Cherry added logic to the ClearSaveButton to automatically move on to the next button when navigating left/right, skipping over disabled buttons.
+    // However, they did not add this logic to the RestoreSaveButton, so this mod's custom button setup breaks.
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(Selectable), nameof(Selectable.OnMove))]
+    private static void RestoreSaveButton_OnMove_Prefix(Selectable __instance, AxisEventData eventData, ref bool __runOriginal)
+    {
+        if (__instance is not RestoreSaveButton)
+        {
+            return;
+        }
+
+        bool moveRight;
+        switch (eventData.moveDir)
+        {
+            case MoveDirection.Right:
+                moveRight = true;
+                break;
+            case MoveDirection.Left:
+                moveRight = false;
+                break;
+            default:
+                return;
+        }
+
+        Selectable? target = TryNavigateSkippingDisabled(__instance, moveRight);
+        if (target != null)
+        {
+            eventData.selectedObject = target.gameObject;
+        }
+
+        __runOriginal = false;
+    }
+
+    private static Selectable? TryNavigateSkippingDisabled(Selectable start, bool moveRight)
+    {
+        Selectable? current = start;
+
+        while (true)
+        {
+            current = moveRight
+                ? current.FindSelectableOnRight()
+                : current.FindSelectableOnLeft();
+            if (current == null)
+            {
+                return null;
+            }
+
+            if (current.IsActive() && current.IsInteractable())
+            {
+                return current;
+            }
+        }
     }
 }
