@@ -1,8 +1,6 @@
-using BepInEx.Logging;
 using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Models;
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,24 +9,19 @@ namespace SaveFileManagerMod.UI;
 
 public sealed class SaveOptions : IDisposable
 {
-    private readonly SaveSlotButton m_saveSlotButton;
-    private readonly InputHandler m_inputHandler;
+    public readonly SaveSlotButton m_saveSlotButton;
+    public readonly InputHandler m_inputHandler;
 
-    private readonly SaveSlotActionRow m_actionRow;
-    private readonly ArchiveMenuController m_archiveMenu;
+    public readonly SaveSlotActionRow m_actionRow;
+    public readonly ArchiveMenuController m_archiveMenu;
 
-    private readonly Text m_customNameLabel;
+    public readonly Text m_customNameLabel;
+    public readonly TextInput<string> m_renameInput;
 
-    private readonly GameObject m_renamePanel;
-    private readonly CanvasGroup m_renamePanelGroup;
-    private readonly TextInput<string> m_renameInput;
-    private readonly TextButton m_renameSaveButton;
-    private readonly TextButton m_renameCancelButton;
+    public readonly SaveOptionsUpdater m_updater;
 
-    private readonly SaveOptionsUpdater m_updater;
-
-    private bool m_renamePanelOpen;
-    private bool m_isDisposed;
+    public bool m_isRenaming;
+    public bool m_isDisposed;
 
     public SaveOptions(SaveSlotButton button)
     {
@@ -38,20 +31,11 @@ public sealed class SaveOptions : IDisposable
 
         SfmLogger.LogInfo($"Creating SaveOptions for {button.name}");
 
-        m_actionRow = new SaveSlotActionRow(m_saveSlotButton, OpenRenamePanel, OpenArchiveMenu);
+        m_actionRow = new SaveSlotActionRow(m_saveSlotButton, OpenRenameEditor, OpenArchiveMenu);
 
         m_customNameLabel = CreateCustomNameLabel();
-
-        (
-            m_renamePanel,
-            m_renamePanelGroup,
-            m_renameInput,
-            m_renameSaveButton,
-            m_renameCancelButton
-        ) = BuildRenamePanel();
-
-        SetRenamePanelVisible(visible: false);
-        m_renamePanelOpen = false;
+        m_renameInput = BuildInlineRenameEditor();
+        SetRenameEditorVisible(visible: false);
 
         m_updater = m_saveSlotButton.gameObject.AddComponent<SaveOptionsUpdater>();
         m_updater.Initialize(this);
@@ -70,19 +54,11 @@ public sealed class SaveOptions : IDisposable
         m_updater.ClearOwner();
 
         m_actionRow.Dispose();
-
         m_renameInput.Dispose();
-        m_renameSaveButton.Dispose();
-        m_renameCancelButton.Dispose();
 
         if (m_customNameLabel != null)
         {
             UnityEngine.Object.Destroy(m_customNameLabel.gameObject);
-        }
-
-        if (m_renamePanel != null)
-        {
-            UnityEngine.Object.Destroy(m_renamePanel);
         }
 
         if (m_updater != null)
@@ -103,12 +79,25 @@ public sealed class SaveOptions : IDisposable
             return;
         }
 
-        if (m_renamePanelOpen
-            && m_inputHandler.acceptingInput
-            && m_inputHandler.inputActions.MenuCancel.WasPressed)
+        if (m_isRenaming && m_inputHandler.acceptingInput)
         {
-            m_inputHandler.inputActions.MenuCancel.ClearInputState();
-            CloseRenamePanel(restoreSelection: true);
+            bool submitPressed = m_inputHandler.inputActions.MenuSubmit.WasPressed
+                || Input.GetKeyDown(KeyCode.Return)
+                || Input.GetKeyDown(KeyCode.KeypadEnter);
+
+            bool cancelPressed = m_inputHandler.inputActions.MenuCancel.WasPressed
+                || Input.GetKeyDown(KeyCode.Escape);
+
+            if (cancelPressed)
+            {
+                m_inputHandler.inputActions.MenuCancel.ClearInputState();
+                CloseRenameEditor(saveChanges: false, restoreSelection: true);
+            }
+            else if (submitPressed)
+            {
+                m_inputHandler.inputActions.MenuSubmit.ClearInputState();
+                CloseRenameEditor(saveChanges: true, restoreSelection: true);
+            }
         }
 
         SyncFromSlotState();
@@ -121,12 +110,15 @@ public sealed class SaveOptions : IDisposable
             return;
         }
 
-        m_actionRow.Refresh();
+        if (!m_isRenaming)
+        {
+            m_actionRow.Refresh();
+        }
 
         if (SaveFileManagerPlugin.s_instance.TryGetCustomName(m_saveSlotButton.SaveSlotIndex, out string customName))
         {
             m_customNameLabel.text = customName;
-            m_customNameLabel.gameObject.SetActive(value: true);
+            m_customNameLabel.gameObject.SetActive(!m_isRenaming);
         }
         else
         {
@@ -135,9 +127,9 @@ public sealed class SaveOptions : IDisposable
         }
     }
 
-    private void OpenRenamePanel()
+    private void OpenRenameEditor()
     {
-        if (m_renamePanelOpen || m_archiveMenu.IsOpen)
+        if (m_isRenaming || m_archiveMenu.IsOpen)
         {
             return;
         }
@@ -151,49 +143,48 @@ public sealed class SaveOptions : IDisposable
             m_renameInput.Value = string.Empty;
         }
 
-        m_renamePanelOpen = true;
-        SetRenamePanelVisible(visible: true);
-        SetRenamePanelNavigation();
-        FocusGameObject(m_renameInput.SelectableComponent.gameObject);
+        m_isRenaming = true;
+        m_customNameLabel.gameObject.SetActive(value: false);
+        m_actionRow.SetButtonVisibility(visible: false);
+        SetRenameEditorVisible(visible: true);
+        EventSystem.current?.SetSelectedGameObject(m_renameInput.InputField.gameObject);
         m_renameInput.InputField.ActivateInputField();
     }
 
     private void OpenArchiveMenu()
     {
-        if (m_renamePanelOpen)
+        if (m_isRenaming)
         {
-            CloseRenamePanel(restoreSelection: false);
+            CloseRenameEditor(saveChanges: false, restoreSelection: false);
         }
 
         m_archiveMenu.OpenForSlot(m_saveSlotButton);
     }
 
-    private void SaveRename()
+    private void CloseRenameEditor(bool saveChanges, bool restoreSelection)
     {
-        SaveFileManagerPlugin.s_instance.SetCustomName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
-        CloseRenamePanel(restoreSelection: true);
-    }
-
-    private void CloseRenamePanel(bool restoreSelection)
-    {
-        if (!m_renamePanelOpen)
+        if (!m_isRenaming)
         {
             return;
         }
 
-        m_renamePanelOpen = false;
-        SetRenamePanelVisible(visible: false);
-
-        if (restoreSelection)
+        if (saveChanges)
         {
-            FocusGameObject(m_saveSlotButton.gameObject);
+            SaveFileManagerPlugin.s_instance.SetCustomName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
         }
+
+        var focusedElement = restoreSelection ? m_actionRow.m_rename : null;
+
+        m_isRenaming = false;
+        SetRenameEditorVisible(visible: false);
+        m_actionRow.SetButtonVisibility(visible: true, focusedElement: focusedElement);
+        SyncFromSlotState();
     }
 
     private Text CreateCustomNameLabel()
     {
         Text label = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, m_saveSlotButton.locationText.transform.parent);
-        label.name = "CustomSaveNameLabel";
+        label.name = "SFM-CustomSaveNameLabel";
         label.fontSize = Mathf.Max(16, m_saveSlotButton.locationText.fontSize - 6);
         label.color = new Color(1f, 0.86f, 0.58f, 1f);
         label.raycastTarget = false;
@@ -202,127 +193,38 @@ public sealed class SaveOptions : IDisposable
         return label;
     }
 
-    private (
-        GameObject root,
-        CanvasGroup group,
-        TextInput<string> input,
-        TextButton saveButton,
-        TextButton cancelButton
-    ) BuildRenamePanel()
+    private TextInput<string> BuildInlineRenameEditor()
     {
-        GameObject root = CreatePanelRoot("SFM-RenamePanel", out CanvasGroup group, new Vector2(900f, 360f), new Vector2(0f, -120f));
-        root.transform.SetParent(m_saveSlotButton.transform, worldPositionStays: false);
-        _ = CreatePanelLabel(root.transform, "Rename Save", 24, new Vector2(0f, 132f));
+        TextInput<string> input = new("", TextModels.ForStrings(), "");
+        input.Container.name = "SFM-InlineRenameEditor";
 
-        TextInput<string> input = new("Name", TextModels.ForStrings(), "Temporary session label");
+        RectTransform slotRect = m_saveSlotButton.GetComponent<RectTransform>();
+        RectTransform actionRowRect = m_saveSlotButton.clearSaveButton.GetComponent<RectTransform>();
+
+        input.RectTransform.SetParent(actionRowRect.parent, worldPositionStays: false);
+        input.RectTransform.anchorMin = actionRowRect.anchorMin;
+        input.RectTransform.anchorMax = actionRowRect.anchorMax;
+        input.RectTransform.pivot = actionRowRect.pivot;
+        input.RectTransform.anchoredPosition = new Vector2(0f, actionRowRect.anchoredPosition.y);
+        input.RectTransform.sizeDelta = new Vector2(slotRect.rect.width, actionRowRect.rect.height);
+
+        RectTransform inputRect = input.InputField.GetComponent<RectTransform>();
+        inputRect.sizeDelta = new Vector2(slotRect.rect.width, actionRowRect.rect.height);
+
+        input.LabelText.gameObject.SetActive(value: false);
+        input.DescriptionText.gameObject.SetActive(value: false);
+
         input.InputField.characterLimit = 48;
-        AttachPanelElement(input, root.transform, new Vector2(0f, 40f));
+        input.InputField.lineType = InputField.LineType.SingleLine;
+        input.InputField.textComponent.fontSize = m_customNameLabel.fontSize;
+        input.InputField.textComponent.color = new Color(1f, 0.86f, 0.58f, 1f);
 
-        TextButton saveButton = new("Save", "Apply custom name")
-        {
-            OnSubmit = SaveRename
-        };
-        AttachPanelElement(saveButton, root.transform, new Vector2(0f, -54f));
-
-        TextButton cancelButton = new("Back", "Close rename panel")
-        {
-            OnSubmit = () => CloseRenamePanel(restoreSelection: true)
-        };
-        AttachPanelElement(cancelButton, root.transform, new Vector2(0f, -132f));
-
-        return (root, group, input, saveButton, cancelButton);
+        return input;
     }
 
-    private static GameObject CreatePanelRoot(string name, out CanvasGroup group, Vector2 size, Vector2 anchoredPosition)
+    private void SetRenameEditorVisible(bool visible)
     {
-        GameObject root = new(name, typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-        RectTransform rect = root.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = size;
-        rect.anchoredPosition = anchoredPosition;
-
-        group = root.GetComponent<CanvasGroup>();
-        group.alpha = 0f;
-        group.blocksRaycasts = false;
-        group.interactable = false;
-
-        Image background = root.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.84f);
-        background.raycastTarget = true;
-
-        return root;
-    }
-
-    private Text CreatePanelLabel(Transform parent, string content, int fontSize, Vector2 anchoredPosition)
-    {
-        Text label = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, parent);
-        label.name = "PanelLabel";
-        label.text = content;
-        label.fontSize = fontSize;
-        label.color = Color.white;
-        label.raycastTarget = false;
-
-        RectTransform rect = label.rectTransform;
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = anchoredPosition;
-        return label;
-    }
-
-    private static void AttachPanelElement(MenuElement element, Transform parent, Vector2 anchoredPosition)
-    {
-        element.RectTransform.SetParent(parent, worldPositionStays: false);
-        element.RectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-        element.RectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        element.RectTransform.pivot = new Vector2(0.5f, 0.5f);
-        element.RectTransform.anchoredPosition = anchoredPosition;
-    }
-
-    private void SetRenamePanelVisible(bool visible)
-    {
-        m_renamePanel.SetActive(visible);
-        m_renamePanelGroup.alpha = visible ? 1f : 0f;
-        m_renamePanelGroup.blocksRaycasts = visible;
-        m_renamePanelGroup.interactable = visible;
-    }
-
-    private void SetRenamePanelNavigation()
-    {
-        SetLoopNav(
-            m_renameInput.SelectableComponent,
-            up: m_renameCancelButton.SelectableComponent,
-            down: m_renameSaveButton.SelectableComponent
-        );
-        SetLoopNav(
-            m_renameSaveButton.SelectableComponent,
-            up: m_renameInput.SelectableComponent,
-            down: m_renameCancelButton.SelectableComponent
-        );
-        SetLoopNav(
-            m_renameCancelButton.SelectableComponent,
-            up: m_renameSaveButton.SelectableComponent,
-            down: m_renameInput.SelectableComponent
-        );
-    }
-
-    private static void SetLoopNav(Selectable selectable, Selectable up, Selectable down)
-    {
-        Navigation nav = selectable.navigation;
-        nav.mode = Navigation.Mode.Explicit;
-        nav.selectOnUp = up;
-        nav.selectOnDown = down;
-        selectable.navigation = nav;
-    }
-
-    private static void FocusGameObject(GameObject obj)
-    {
-        EventSystem? eventSystem = EventSystem.current;
-        if (eventSystem != null)
-        {
-            eventSystem.SetSelectedGameObject(obj);
-        }
+        m_renameInput.Container.SetActive(visible);
+        m_renameInput.Interactable = visible;
     }
 }

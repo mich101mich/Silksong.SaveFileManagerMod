@@ -46,15 +46,15 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         public string Details { get; }
     }
 
-    public static SaveFileManagerPlugin s_instance { get; private set; } = null!;
-    private Harmony m_harmony = null!;
+    public static SaveFileManagerPlugin s_instance = null!;
+    public Harmony m_harmony = null!;
 
-    private List<SaveOptions> m_saveOptions = new();
-    private Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptionMap = new();
-    internal ArchiveMenuController m_archiveMenu { get; private set; } = null!;
+    public List<SaveOptions> m_saveOptions = new();
+    public Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptionMap = new();
+    internal ArchiveMenuController m_archiveMenu = null!;
 
-    private readonly Dictionary<int, string> m_customSlotNames = new();
-    private readonly List<MockArchiveEntry> m_mockArchiveEntries = new()
+    public Dictionary<int, string> m_customSlotNames = new();
+    public List<MockArchiveEntry> m_mockArchiveEntries = new()
     {
         new MockArchiveEntry("archive-01", "Archive A", "Moss Grotto - 03:21"),
         new MockArchiveEntry("archive-02", "Archive B", "Citadel - 12:44"),
@@ -78,7 +78,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         m_customSlotNames[slotIndex] = normalized;
     }
 
-    private void Awake()
+    public void Awake()
     {
         s_instance = this;
         SfmLogger._logger = base.Logger;
@@ -112,7 +112,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         }
     }
 
-    private void OnDestroy()
+    public void OnDestroy()
     {
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
         m_harmony.UnpatchSelf();
@@ -134,7 +134,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(Selectable), nameof(Selectable.OnMove))]
-    private static void RestoreSaveButton_OnMove_Prefix(Selectable __instance, AxisEventData eventData, ref bool __runOriginal)
+    public static void RestoreSaveButton_OnMove_Prefix(Selectable __instance, AxisEventData eventData, ref bool __runOriginal)
     {
         if (__instance is not RestoreSaveButton)
         {
@@ -163,7 +163,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         __runOriginal = false;
     }
 
-    private static Selectable? TryNavigateSkippingDisabled(Selectable start, bool moveRight)
+    public static Selectable? TryNavigateSkippingDisabled(Selectable start, bool moveRight)
     {
         Selectable? current = start;
 
