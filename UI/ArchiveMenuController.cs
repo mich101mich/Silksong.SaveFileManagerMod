@@ -3,6 +3,7 @@ using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Screens;
 using System;
 using System.Collections;
+using System.Reflection;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
@@ -14,6 +15,12 @@ public sealed class ArchiveMenuController : IDisposable
 
     private ScrollingMenuScreen? m_screen;
     private TextLabel? m_statusLabel;
+
+    private static readonly MethodInfo? s_invokeOnShow = typeof(AbstractMenuScreen)
+        .GetMethod("InvokeOnShow", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static readonly MethodInfo? s_invokeOnHide = typeof(AbstractMenuScreen)
+        .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic);
 
     private bool m_isOpen;
     private bool m_isTransitioning;
@@ -162,6 +169,8 @@ public sealed class ArchiveMenuController : IDisposable
             yield return ui.StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
         }
 
+        InvokeScreenOnShow(m_screen);
+
         yield return ui.StartCoroutine(ui.ShowMenu(m_screen.MenuScreen));
 
         m_isOpen = true;
@@ -180,6 +189,8 @@ public sealed class ArchiveMenuController : IDisposable
         UIManager ui = UIManager.instance;
         yield return ui.StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
 
+        InvokeScreenOnHide(m_screen);
+
         m_screen.Dispose();
         m_screen = null;
         m_statusLabel = null;
@@ -188,6 +199,26 @@ public sealed class ArchiveMenuController : IDisposable
         yield return ui.StartCoroutine(ui.GoToProfileMenu());
 
         m_isTransitioning = false;
+    }
+
+    private static void InvokeScreenOnShow(AbstractMenuScreen screen)
+    {
+        if (s_invokeOnShow == null)
+        {
+            return;
+        }
+
+        s_invokeOnShow.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Forwards });
+    }
+
+    private static void InvokeScreenOnHide(AbstractMenuScreen screen)
+    {
+        if (s_invokeOnHide == null)
+        {
+            return;
+        }
+
+        s_invokeOnHide.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Backwards });
     }
 
     private sealed class ArchiveMenuUpdater : UnityEngine.MonoBehaviour
