@@ -15,7 +15,7 @@ public sealed class SaveOptions : MonoBehaviour
     public SaveSlotActionRow m_actionRow = null!;
     public ArchiveMenuController m_archiveMenu = null!;
 
-    public Text m_customNameLabel = null!;
+    public Text m_nameLabel = null!;
     public TextInput<string> m_renameInput = null!;
 
     public bool m_isRenaming = false;
@@ -30,8 +30,8 @@ public sealed class SaveOptions : MonoBehaviour
 
         m_actionRow = new SaveSlotActionRow(m_saveSlotButton, OpenRenameEditor, OpenArchiveMenu);
 
-        m_customNameLabel = CreateCustomNameLabel();
-        m_renameInput = BuildInlineRenameEditor();
+        m_nameLabel = CreateNameLabel();
+        m_renameInput = BuildRenameEditor();
         SetRenameEditorVisible(visible: false);
     }
 
@@ -42,9 +42,9 @@ public sealed class SaveOptions : MonoBehaviour
         m_actionRow.Dispose();
         m_renameInput.Dispose();
 
-        if (m_customNameLabel != null)
+        if (m_nameLabel != null)
         {
-            UnityEngine.Object.Destroy(m_customNameLabel.gameObject);
+            UnityEngine.Object.Destroy(m_nameLabel.gameObject);
         }
     }
 
@@ -86,15 +86,15 @@ public sealed class SaveOptions : MonoBehaviour
             m_actionRow.Refresh();
         }
 
-        if (SaveFileManagerPlugin.s_instance.TryGetCustomName(m_saveSlotButton.SaveSlotIndex, out string customName))
+        if (SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out string name))
         {
-            m_customNameLabel.text = customName;
-            m_customNameLabel.gameObject.SetActive(!m_isRenaming);
+            m_nameLabel.text = name;
+            m_nameLabel.gameObject.SetActive(!m_isRenaming);
         }
         else
         {
-            m_customNameLabel.text = string.Empty;
-            m_customNameLabel.gameObject.SetActive(false);
+            m_nameLabel.text = string.Empty;
+            m_nameLabel.gameObject.SetActive(false);
         }
     }
 
@@ -105,9 +105,9 @@ public sealed class SaveOptions : MonoBehaviour
             return;
         }
 
-        if (SaveFileManagerPlugin.s_instance.TryGetCustomName(m_saveSlotButton.SaveSlotIndex, out string customName))
+        if (SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out string name))
         {
-            m_renameInput.Value = customName;
+            m_renameInput.Value = name;
         }
         else
         {
@@ -115,7 +115,7 @@ public sealed class SaveOptions : MonoBehaviour
         }
 
         m_isRenaming = true;
-        m_customNameLabel.gameObject.SetActive(false);
+        m_nameLabel.gameObject.SetActive(false);
         m_actionRow.SetButtonVisibility(visible: false);
         SetRenameEditorVisible(visible: true);
         EventSystem.current?.SetSelectedGameObject(m_renameInput.InputField.gameObject);
@@ -141,7 +141,7 @@ public sealed class SaveOptions : MonoBehaviour
 
         if (saveChanges)
         {
-            SaveFileManagerPlugin.s_instance.SetCustomName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
+            SaveName.SetSlotName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
         }
 
         m_isRenaming = false;
@@ -150,10 +150,10 @@ public sealed class SaveOptions : MonoBehaviour
         SyncFromSlotState();
     }
 
-    private Text CreateCustomNameLabel()
+    private Text CreateNameLabel()
     {
         Text label = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, m_saveSlotButton.locationText.transform.parent);
-        label.name = "SFM-CustomSaveNameLabel";
+        label.name = "SFM-SaveNameLabel";
         label.fontSize = Mathf.Max(16, m_saveSlotButton.locationText.fontSize - 6);
         label.color = new Color(1f, 0.86f, 0.58f, 1f);
         label.raycastTarget = false;
@@ -162,10 +162,10 @@ public sealed class SaveOptions : MonoBehaviour
         return label;
     }
 
-    private TextInput<string> BuildInlineRenameEditor()
+    private TextInput<string> BuildRenameEditor()
     {
         TextInput<string> input = new("", TextModels.ForStrings(), "");
-        input.Container.name = "SFM-InlineRenameEditor";
+        input.Container.name = "SFM-RenameEditor";
 
         RectTransform slotRect = m_saveSlotButton.GetComponent<RectTransform>();
         RectTransform actionRowRect = m_saveSlotButton.clearSaveButton.GetComponent<RectTransform>();
@@ -185,7 +185,7 @@ public sealed class SaveOptions : MonoBehaviour
 
         input.InputField.characterLimit = 48;
         input.InputField.lineType = InputField.LineType.SingleLine;
-        input.InputField.textComponent.fontSize = m_customNameLabel.fontSize;
+        input.InputField.textComponent.fontSize = m_nameLabel.fontSize;
         input.InputField.textComponent.color = new Color(1f, 0.86f, 0.58f, 1f);
 
         return input;

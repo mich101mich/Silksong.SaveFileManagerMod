@@ -52,7 +52,6 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public List<SaveOptions> m_saveOptions = new();
     public ArchiveMenuController m_archiveMenu = null!;
 
-    public Dictionary<int, string> m_customSlotNames = new();
     public List<MockArchiveEntry> m_mockArchiveEntries = new()
     {
         new MockArchiveEntry("archive-01", "Archive A", "Moss Grotto - 03:21"),
@@ -60,22 +59,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         new MockArchiveEntry("archive-03", "Archive C", "Greymoor - 25:08")
     };
 
-    internal IReadOnlyList<MockArchiveEntry> MockArchiveEntries => m_mockArchiveEntries;
-
-    internal bool TryGetCustomName(int slotIndex, out string customName) =>
-        m_customSlotNames.TryGetValue(slotIndex, out customName!);
-
-    internal void SetCustomName(int slotIndex, string customName)
-    {
-        string normalized = customName.Trim();
-        if (string.IsNullOrEmpty(normalized))
-        {
-            m_customSlotNames.Remove(slotIndex);
-            return;
-        }
-
-        m_customSlotNames[slotIndex] = normalized;
-    }
+    public IReadOnlyList<MockArchiveEntry> MockArchiveEntries => m_mockArchiveEntries;
 
     public void Awake()
     {
@@ -127,6 +111,30 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         s_instance = null!;
         SfmLogger._logger = null;
     }
+
+    // ================================================================================
+    // Load Name Handler
+    // ================================================================================
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.Prepare))]
+    public static void SaveSlotButton_Prepare_Postfix(SaveSlotButton __instance)
+    {
+        // Function called on startup and when changing pages with the MoreSaves mod
+        SaveName.ReloadSlot(__instance.SaveSlotIndex);
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.UpdateSaveFileState))]
+    public static void SaveSlotButton_UpdateSaveFileState_Postfix(SaveSlotButton __instance)
+    {
+        // Function called when the select profile menu is opened
+        SaveName.ReloadSlot(__instance.SaveSlotIndex);
+    }
+
+    // ================================================================================
+    // Button Navigation Fixes
+    // ================================================================================
 
     // Patch: Team Cherry added logic to the ClearSaveButton to automatically move on to the next button when navigating left/right, skipping over disabled buttons.
     // However, they did not add this logic to the RestoreSaveButton, so this mod's custom button setup breaks.

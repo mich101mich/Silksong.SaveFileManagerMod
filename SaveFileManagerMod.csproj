@@ -38,6 +38,7 @@
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
     <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
     <PackageReference Include="Silksong.ModMenu" Version="*-*" PrivateAssets="all" />
+    <PackageReference Include="Silksong.DataManager" Version="*-*" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- For non-CI builds: Use DLLs from your local Silksong installation -->
@@ -73,7 +74,10 @@
       <HintPath>$(SilksongDllFolder)/UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="Silksong.ModMenu">
-      <HintPath>$(BepInExPluginsFolder)/ModMenu/Silksong.ModMenu.dll</HintPath>
+      <HintPath>$(BepInExPluginsFolder)/ModMenu-0.7.5/Silksong.ModMenu.dll</HintPath>
+    </Reference>
+    <Reference Include="Silksong.DataManager">
+      <HintPath>$(BepInExPluginsFolder)/DataManager-1.2.2/Silksong.DataManager.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -90,6 +94,7 @@
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.UIModule\UnityEngine.UIModule.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.AnimationModule\UnityEngine.AnimationModule.csproj" />
     <ProjectReference Include="$(ThirdPartySourceFolder)\ModMenu\Silksong.ModMenu\Silksong.ModMenu.csproj" />
+    <ProjectReference Include="$(ThirdPartySourceFolder)\DataManager\src\Silksong.DataManager.csproj" />
   </ItemGroup>
 
   <!-- Shared Dependencies between all configurations -->
