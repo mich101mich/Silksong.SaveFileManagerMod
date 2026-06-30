@@ -12,9 +12,9 @@ using UnityEngine;
 
 namespace SaveFileManagerMod;
 
-internal class SfmLogger
+public class SfmLogger
 {
-    internal static ManualLogSource? _logger;
+    public static ManualLogSource? _logger;
 
     public static void LogInfo(string message)
     {
@@ -50,8 +50,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public Harmony m_harmony = null!;
 
     public List<SaveOptions> m_saveOptions = new();
-    public Dictionary<SaveSlotButton, SaveOptions> m_saveSlotOptionMap = new();
-    internal ArchiveMenuController m_archiveMenu = null!;
+    public ArchiveMenuController m_archiveMenu = null!;
 
     public Dictionary<int, string> m_customSlotNames = new();
     public List<MockArchiveEntry> m_mockArchiveEntries = new()
@@ -99,9 +98,9 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         };
         foreach (var button in saveSlotButtons)
         {
-            var options = new SaveOptions(button);
+            var options = button.gameObject.AddComponent<SaveOptions>();
+            options.Initialize(button);
             m_saveOptions.Add(options);
-            m_saveSlotOptionMap[button] = options;
         }
 
         for (int i = 0; i < m_saveOptions.Count; i++)
@@ -117,11 +116,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
         m_harmony.UnpatchSelf();
 
-        foreach (var saveSlotOption in m_saveSlotOptionMap.Values)
+        foreach (var saveOption in m_saveOptions)
         {
-            saveSlotOption.Dispose();
+            UnityEngine.Object.Destroy(saveOption);
         }
-        m_saveSlotOptionMap.Clear();
+        m_saveOptions.Clear();
 
         m_archiveMenu.Dispose();
 
