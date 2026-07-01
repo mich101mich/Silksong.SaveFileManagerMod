@@ -75,6 +75,25 @@ public class SaveName
         Names[slotIndex] = string.Empty;
     }
 
+    public static void ClearSlot(int slotIndex)
+    {
+        Names[slotIndex] = string.Empty;
+
+        // Deleting is handled by the DataManager mod, which deletes the entire save slot directory when a save is erased.
+        // This entire function is technically not necessary, since the next refresh will call ReloadSlot, which will simply
+        // clear the name since the file is missing, but this is the safer way to ensure the name is cleared.
+
+        var nameFilePath = GetNameFilePath(slotIndex);
+        try
+        {
+            File.Delete(nameFilePath);
+        }
+        catch (Exception)
+        {
+            // Ignore and let DataManager handle the deletion
+        }
+    }
+
     /// <summary>
     /// Gets the file path for the name of a save slot.
     /// </summary>

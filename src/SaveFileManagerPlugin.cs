@@ -132,6 +132,17 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SaveName.ReloadSlot(__instance.SaveSlotIndex);
     }
 
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(SaveSlotButton), "ChangeSaveFileState")]
+    public static void SaveSlotButton_ChangeSaveFileState_Prefix(SaveSlotButton __instance, SaveSlotButton.SaveFileStates nextSaveFileState)
+    {
+        if (nextSaveFileState == SaveSlotButton.SaveFileStates.Empty)
+        {
+            // Save was erased, or file is empty/nonexistent. Clear the name for this slot.
+            SaveName.ClearSlot(__instance.SaveSlotIndex);
+        }
+    }
+
     // ================================================================================
     // Button Navigation Fixes
     // ================================================================================
