@@ -89,15 +89,18 @@ public class ActionButtonWrapper
     {
         yield return new WaitForSeconds(delay);
         yield return UIManager.instance.FadeInCanvasGroup(canvasGroup);
+        canvasGroup.blocksRaycasts = true;
     }
     public IEnumerator FadeOutAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
+        canvasGroup.blocksRaycasts = false;
         yield return UIManager.instance.FadeOutCanvasGroup(canvasGroup);
     }
     public IEnumerator FadeInAndFocus()
     {
         yield return UIManager.instance.FadeInCanvasGroup(canvasGroup);
+        canvasGroup.blocksRaycasts = true;
         EventSystem.current?.SetSelectedGameObject(button.gameObject);
     }
 }
