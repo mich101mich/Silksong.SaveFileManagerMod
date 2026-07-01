@@ -1,12 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using GlobalEnums;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
@@ -118,7 +114,7 @@ public sealed class SaveSlotActionRow : IDisposable
         }
     }
 
-    private SaveSlotActionButton CloneIconButton(string name, Action onSubmit)
+    public SaveSlotActionButton CloneIconButton(string name, Action onSubmit)
     {
         GameObject template = m_slot.clearSaveButton.gameObject;
         GameObject root = UnityEngine.Object.Instantiate(template, template.transform.parent);
@@ -181,17 +177,7 @@ public sealed class SaveSlotActionRow : IDisposable
         return replacement;
     }
 
-    private static void EnsureSubmitEvent(MenuButton button)
-    {
-        if (button.OnSubmitPressed != null)
-        {
-            return;
-        }
-
-        button.OnSubmitPressed = new UnityEvent();
-    }
-
-    private void UpdateLayout()
+    public void UpdateLayout()
     {
         List<RectTransform> rects = m_buttons.Where(b => b.canUse).Select(b => b.rectTransform).ToList();
 
@@ -230,13 +216,4 @@ public sealed class SaveSlotActionRow : IDisposable
         }
     }
 
-}
-
-public static class MyUnityExtensions
-{
-    public static GameObject? FindChild(this GameObject obj, string path)
-    {
-        Transform transform = obj.transform.Find(path);
-        return transform != null ? transform.gameObject : null;
-    }
 }

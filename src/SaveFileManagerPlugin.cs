@@ -1,14 +1,10 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using System;
+using SaveFileManagerMod.UI;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
-using SaveFileManagerMod.UI;
-using System.Collections;
-using UnityEngine;
 
 namespace SaveFileManagerMod;
 
@@ -188,46 +184,18 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
             return;
         }
 
-        bool moveRight;
-        switch (eventData.moveDir)
+        if (!__runOriginal)
         {
-            case MoveDirection.Right:
-                moveRight = true;
-                break;
-            case MoveDirection.Left:
-                moveRight = false;
-                break;
-            default:
-                return;
+            return; // Another prefix has already handled this event
         }
 
-        Selectable? target = TryNavigateSkippingDisabled(__instance, moveRight);
-        if (target != null)
+        if (SaveSlotActionButton.TryNavigateSkippingDisabled(eventData, __instance))
         {
-            eventData.selectedObject = target.gameObject;
+            // we have successfully navigated to a new button => skip original logic
+            __runOriginal = false;
         }
-
-        __runOriginal = false;
+        // else: continue with default behavior
     }
 
-    public static Selectable? TryNavigateSkippingDisabled(Selectable start, bool moveRight)
-    {
-        Selectable? current = start;
 
-        while (true)
-        {
-            current = moveRight
-                ? current.FindSelectableOnRight()
-                : current.FindSelectableOnLeft();
-            if (current == null)
-            {
-                return null;
-            }
-
-            if (current.IsActive() && current.IsInteractable())
-            {
-                return current;
-            }
-        }
-    }
 }

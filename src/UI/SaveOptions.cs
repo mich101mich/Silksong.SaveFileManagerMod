@@ -1,6 +1,5 @@
 using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Models;
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -98,7 +97,7 @@ public sealed class SaveOptions : MonoBehaviour
         }
     }
 
-    private void OpenRenameEditor()
+    public void OpenRenameEditor()
     {
         if (m_isRenaming || m_archiveMenu.IsOpen)
         {
@@ -122,7 +121,7 @@ public sealed class SaveOptions : MonoBehaviour
         m_renameInput.InputField.ActivateInputField();
     }
 
-    private void OpenArchiveMenu()
+    public void OpenArchiveMenu()
     {
         if (m_isRenaming)
         {
@@ -132,7 +131,7 @@ public sealed class SaveOptions : MonoBehaviour
         m_archiveMenu.OpenForSlot(m_saveSlotButton);
     }
 
-    private void CloseRenameEditor(bool saveChanges)
+    public void CloseRenameEditor(bool saveChanges)
     {
         if (!m_isRenaming)
         {
@@ -150,7 +149,7 @@ public sealed class SaveOptions : MonoBehaviour
         SyncFromSlotState();
     }
 
-    private Text CreateNameLabel()
+    public Text CreateNameLabel()
     {
         Text label = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, m_saveSlotButton.locationText.transform.parent);
         label.name = "SFM-SaveNameLabel";
@@ -162,7 +161,7 @@ public sealed class SaveOptions : MonoBehaviour
         return label;
     }
 
-    private TextInput<string> BuildRenameEditor()
+    public TextInput<string> BuildRenameEditor()
     {
         TextInput<string> input = new("", TextModels.ForStrings(), "");
         input.Container.name = "SFM-RenameEditor";
@@ -191,7 +190,7 @@ public sealed class SaveOptions : MonoBehaviour
         return input;
     }
 
-    private void SetRenameEditorVisible(bool visible)
+    public void SetRenameEditorVisible(bool visible)
     {
         m_renameInput.Container.SetActive(visible);
         m_renameInput.Interactable = visible;

@@ -12,43 +12,29 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 
 	public Action? onSubmit;
 
-	private static readonly int _isSelectedProp = Animator.StringToHash("Is Selected");
+	public static readonly int _isSelectedProp = Animator.StringToHash("Is Selected");
 
 	public override void OnMove(AxisEventData eventData)
 	{
-		switch (eventData.moveDir)
+		if (TryNavigateSkippingDisabled(eventData, this))
 		{
-			case MoveDirection.Right:
-				Navigate(eventData, FindSelectableOnRight());
-				break;
-			case MoveDirection.Left:
-				Navigate(eventData, FindSelectableOnLeft());
-				break;
-			default:
-				base.OnMove(eventData);
-				break;
+			// handled
+		}
+		else
+		{
+			base.OnMove(eventData);
 		}
 	}
 
-	private void Navigate(AxisEventData eventData, Selectable sel)
+	public void Navigate(AxisEventData eventData, Selectable sel)
 	{
-		if (sel == null)
-		{
-			return;
-		}
 		if (sel.IsActive() && sel.IsInteractable())
 		{
 			eventData.selectedObject = sel.gameObject;
-			return;
 		}
-		switch (eventData.moveDir)
+		else
 		{
-			case MoveDirection.Right:
-				Navigate(eventData, sel.FindSelectableOnRight());
-				break;
-			case MoveDirection.Left:
-				Navigate(eventData, sel.FindSelectableOnLeft());
-				break;
+			TryNavigateSkippingDisabled(eventData, sel);
 		}
 	}
 
@@ -91,9 +77,39 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		}
 	}
 
-	private IEnumerator SelectAfterFrame(GameObject obj)
+	public IEnumerator SelectAfterFrame(GameObject obj)
 	{
 		yield return new WaitForEndOfFrame();
 		EventSystem.current.SetSelectedGameObject(obj);
+	}
+
+	public static bool TryNavigateSkippingDisabled(AxisEventData eventData, Selectable start)
+	{
+		if (eventData.moveDir != MoveDirection.Right && eventData.moveDir != MoveDirection.Left)
+		{
+			return false;
+		}
+
+		var current = start;
+
+		while (true)
+		{
+			var next = eventData.moveDir == MoveDirection.Right
+				? current.FindSelectableOnRight()
+				: current.FindSelectableOnLeft();
+
+			if (next == null)
+			{
+				return false;
+			}
+
+			current = next;
+
+			if (current.IsActive() && current.IsInteractable())
+			{
+				eventData.selectedObject = current.gameObject;
+				return true;
+			}
+		}
 	}
 }

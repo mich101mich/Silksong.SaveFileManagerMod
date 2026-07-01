@@ -1,4 +1,3 @@
-using GlobalEnums;
 using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Screens;
 using System;
@@ -10,20 +9,20 @@ namespace SaveFileManagerMod.UI;
 
 public sealed class ArchiveMenuController : IDisposable
 {
-    private readonly SaveFileManagerPlugin m_plugin;
-    private readonly ArchiveMenuUpdater m_updater;
+    public readonly SaveFileManagerPlugin m_plugin;
+    public readonly ArchiveMenuUpdater m_updater;
 
-    private ScrollingMenuScreen? m_screen;
-    private TextLabel? m_statusLabel;
+    public ScrollingMenuScreen? m_screen;
+    public TextLabel? m_statusLabel;
 
-    private static readonly MethodInfo? s_invokeOnShow = typeof(AbstractMenuScreen)
+    public static readonly MethodInfo? s_invokeOnShow = typeof(AbstractMenuScreen)
         .GetMethod("InvokeOnShow", BindingFlags.Instance | BindingFlags.NonPublic);
 
-    private static readonly MethodInfo? s_invokeOnHide = typeof(AbstractMenuScreen)
+    public static readonly MethodInfo? s_invokeOnHide = typeof(AbstractMenuScreen)
         .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic);
 
-    private bool m_isOpen;
-    private bool m_isTransitioning;
+    public bool m_isOpen;
+    public bool m_isTransitioning;
 
     public bool IsOpen => m_isOpen || m_isTransitioning;
 
@@ -69,7 +68,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_plugin.StartCoroutine(OpenRoutine());
     }
 
-    private void Close()
+    public void Close()
     {
         if (!m_isOpen || m_isTransitioning)
         {
@@ -79,7 +78,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_plugin.StartCoroutine(CloseRoutine());
     }
 
-    internal void Tick()
+    public void Tick()
     {
         if (!m_isOpen || m_isTransitioning)
         {
@@ -96,7 +95,7 @@ public sealed class ArchiveMenuController : IDisposable
         Close();
     }
 
-    private void BuildScreen(SaveSlotButton slot)
+    public void BuildScreen(SaveSlotButton slot)
     {
         m_screen?.Dispose();
 
@@ -146,7 +145,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_screen = screen;
     }
 
-    private void SetStatus(string message)
+    public void SetStatus(string message)
     {
         if (m_statusLabel != null)
         {
@@ -154,7 +153,7 @@ public sealed class ArchiveMenuController : IDisposable
         }
     }
 
-    private IEnumerator OpenRoutine()
+    public IEnumerator OpenRoutine()
     {
         if (m_screen == null)
         {
@@ -164,7 +163,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_isTransitioning = true;
 
         UIManager ui = UIManager.instance;
-        if (ui.menuState == MainMenuState.SAVE_PROFILES)
+        if (ui.menuState == GlobalEnums.MainMenuState.SAVE_PROFILES)
         {
             yield return ui.StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
         }
@@ -177,7 +176,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_isTransitioning = false;
     }
 
-    private IEnumerator CloseRoutine()
+    public IEnumerator CloseRoutine()
     {
         if (m_screen == null)
         {
@@ -201,7 +200,7 @@ public sealed class ArchiveMenuController : IDisposable
         m_isTransitioning = false;
     }
 
-    private static void InvokeScreenOnShow(AbstractMenuScreen screen)
+    public static void InvokeScreenOnShow(AbstractMenuScreen screen)
     {
         if (s_invokeOnShow == null)
         {
@@ -211,7 +210,7 @@ public sealed class ArchiveMenuController : IDisposable
         s_invokeOnShow.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Forwards });
     }
 
-    private static void InvokeScreenOnHide(AbstractMenuScreen screen)
+    public static void InvokeScreenOnHide(AbstractMenuScreen screen)
     {
         if (s_invokeOnHide == null)
         {
@@ -221,9 +220,9 @@ public sealed class ArchiveMenuController : IDisposable
         s_invokeOnHide.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Backwards });
     }
 
-    private sealed class ArchiveMenuUpdater : UnityEngine.MonoBehaviour
+    public sealed class ArchiveMenuUpdater : UnityEngine.MonoBehaviour
     {
-        private ArchiveMenuController? m_owner;
+        public ArchiveMenuController? m_owner;
 
         public void Initialize(ArchiveMenuController owner)
         {
@@ -235,7 +234,7 @@ public sealed class ArchiveMenuController : IDisposable
             m_owner = null;
         }
 
-        private void Update()
+        public void Update()
         {
             m_owner?.Tick();
         }
