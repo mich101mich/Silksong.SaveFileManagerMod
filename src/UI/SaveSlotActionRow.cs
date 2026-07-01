@@ -23,6 +23,9 @@ public sealed class SaveSlotActionRow : IDisposable
     public readonly ActionButtonWrapper m_clear;
     public readonly List<ActionButtonWrapper> m_buttons;
 
+    public static readonly FieldInfo s_emptySlotNav = typeof(SaveSlotButton).GetField("emptySlotNav", BindingFlags.NonPublic | BindingFlags.Instance)!;
+    public static readonly FieldInfo s_defeatedSlotNav = typeof(SaveSlotButton).GetField("defeatedSlotNav", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
     public bool m_disposed;
 
     public SaveSlotActionRow(SaveSlotButton slot, Action onRename, Action onArchive)
@@ -100,7 +103,7 @@ public sealed class SaveSlotActionRow : IDisposable
         }
 
         m_restore.SetUsable(!isBlocked && !isEmpty && !isDefeated);
-        m_rename.SetUsable(!isBlocked && !isEmpty);
+        m_rename.SetUsable(!isBlocked && !isEmpty && !isDefeated);
         m_archive.SetUsable(!isBlocked);
         m_clear.SetUsable(!isBlocked && !isEmpty);
 
@@ -216,17 +219,14 @@ public sealed class SaveSlotActionRow : IDisposable
             m_buttons[i].button.navigation = nav;
         }
 
-        // Update the various navigation fields on SaveSlotButton to point to the archive button.
-        // By default, empty goes to the back button, and defeated to the clear button.
-        // We point all to the archive button since that is the most available action.
-        foreach (var field in new[] { "fullSlotNav", "emptySlotNav", "defeatedSlotNav" })
+        // Empty slot normally has no buttons, meaning it navigates to the back button.
+        // Defeated slots normally only have a clear button. 
+        // We added an archive button, so we need to navigate there instead.
+        foreach (var navField in new[] { s_emptySlotNav, s_defeatedSlotNav })
         {
-            var fieldInfo = typeof(SaveSlotButton)
-                .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)!;
-
-            var nav = (Navigation)fieldInfo.GetValue(m_slot)!;
+            var nav = (Navigation)navField.GetValue(m_slot)!;
             nav.selectOnDown = m_archive.button;
-            fieldInfo.SetValue(m_slot, nav);
+            navField.SetValue(m_slot, nav);
         }
     }
 
