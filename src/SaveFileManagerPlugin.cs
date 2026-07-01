@@ -71,6 +71,52 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
 
         m_harmony = new Harmony($"harmony-{Id}");
         m_harmony.PatchAll(typeof(SaveFileManagerPlugin));
+    }
+
+    public void OnDestroy()
+    {
+        SfmLogger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
+        m_harmony.UnpatchSelf();
+
+        foreach (var saveOption in m_saveOptions)
+        {
+            UnityEngine.Object.Destroy(saveOption);
+        }
+        m_saveOptions.Clear();
+
+        m_archiveMenu.Dispose();
+
+        s_instance = null!;
+        SfmLogger._logger = null;
+    }
+
+    // ================================================================================
+    // Delete/Reinit handling
+    // ================================================================================
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(UIManager), nameof(UIManager.UIGoToProfileMenu))]
+    public static void UIManager_UIGoToProfileMenu_Prefix(UIManager __instance)
+    {
+        s_instance.initUi();
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(UIManager), nameof(UIManager.MakeMenuLean))]
+    public static void UIManager_MakeMenuLean_Prefix(UIManager __instance)
+    {
+        // Called when the player loads into a file. The menu objects are destroyed here to improve performance, so we need to clear our references to them.
+        s_instance.m_saveOptions.Clear();
+    }
+
+    public void initUi()
+    {
+        if (m_saveOptions.Count > 0)
+        {
+            return;
+        }
+
+        SfmLogger.LogInfo("Initializing SaveOptions for all save slots...");
 
         var ui = UIManager.instance;
         var saveSlotButtons = new List<SaveSlotButton>()
@@ -93,23 +139,6 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
             var next = i + 1 < m_saveOptions.Count ? m_saveOptions[i + 1] : null;
             m_saveOptions[i].SetupNavigation(prev, next);
         }
-    }
-
-    public void OnDestroy()
-    {
-        SfmLogger.LogInfo($"Plugin {Name} ({Id}) is unloading...");
-        m_harmony.UnpatchSelf();
-
-        foreach (var saveOption in m_saveOptions)
-        {
-            UnityEngine.Object.Destroy(saveOption);
-        }
-        m_saveOptions.Clear();
-
-        m_archiveMenu.Dispose();
-
-        s_instance = null!;
-        SfmLogger._logger = null;
     }
 
     // ================================================================================
