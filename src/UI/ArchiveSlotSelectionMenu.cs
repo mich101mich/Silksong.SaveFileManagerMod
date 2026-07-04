@@ -2,13 +2,15 @@ using Silksong.ModMenu.Elements;
 using Silksong.ModMenu.Screens;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public sealed class ArchiveMenuController : MonoBehaviour
+public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
 {
     public ScrollingMenuScreen? m_screen;
 
@@ -19,13 +21,17 @@ public sealed class ArchiveMenuController : MonoBehaviour
         .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic);
 
     public int m_selectedSlotIndex = -1;
-    public string? m_slotSummary = null;
+    public bool m_selectedSlotIsEmpty = false;
+    public string m_slotSummary = "";
 
     public bool m_isOpen = false;
     public bool m_isTransitioning = false;
     public bool m_shouldClose = false;
 
     public bool IsOpen => m_isOpen || m_isTransitioning;
+
+    public List<ArchiveMenuEntry?> m_rawEntries = new();
+    public int m_numFilledEntries = 0;
 
     public void OnDestroy()
     {
@@ -47,38 +53,40 @@ public sealed class ArchiveMenuController : MonoBehaviour
         }
 
         m_selectedSlotIndex = slot.SaveSlotIndex;
+        m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
 
-        m_slotSummary = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty
-            ? $"Empty slot {slot.SaveSlotIndex}"
-            : $"Select target for Slot {slot.SaveSlotIndex}";
+        if (m_selectedSlotIsEmpty)
+        {
+            m_slotSummary = $"Load into Slot {slot.SaveSlotIndex}";
+        }
+        else if (SaveName.TryGetSlotName(slot.SaveSlotIndex, out string slotName))
+        {
+            m_slotSummary = $"Archive/Replace {slotName} (Slot {slot.SaveSlotIndex})";
+        }
+        else
+        {
+            m_slotSummary = $"Archive/Replace Slot {slot.SaveSlotIndex}";
+        }
 
         StartCoroutine(OpenRoutine());
     }
 
     public void Close()
     {
-        SfmLogger.LogInfo("Closing ArchiveMenuController. IsOpen: " + m_isOpen + ", IsTransitioning: " + m_isTransitioning + ", ShouldClose: " + m_shouldClose);
-        if (m_isOpen)
+        if (m_isTransitioning)
         {
-            if (m_isTransitioning)
-            {
-                // already in the close routine
-            }
-            else
-            {
-                StartCoroutine(CloseRoutine());
-            }
-        }
-        else if (m_isTransitioning)
-        {
-            // in the open routine
+            // Abort the current routine
             m_shouldClose = true;
+        }
+        else if (m_isOpen)
+        {
+            StartCoroutine(CloseRoutine());
         }
     }
 
     public void Update()
     {
-        if (!m_isOpen && !m_isTransitioning)
+        if (!IsOpen)
         {
             return;
         }
@@ -99,21 +107,25 @@ public sealed class ArchiveMenuController : MonoBehaviour
 
         m_screen?.Dispose();
 
-        m_screen = new("Save Archive");
+        m_screen = new(m_slotSummary);
         m_screen.AllowGoBack = false;
         m_screen.OnGoBack += Close;
 
-        m_screen.Add(new TextLabel(m_slotSummary!));
+        var statusLabel = new TextLabel("Loading save slots...");
+        m_screen.Add(statusLabel);
+
+        m_rawEntries.Clear();
+        m_rawEntries.Add(null); // index 0 is unused
 
         // Add the first entries immediately so that there is something to select
         for (int i = 1; i <= 4; i++)
         {
-            if (i == m_selectedSlotIndex)
+            AddEntry(i);
+            yield return new WaitUntil(() => m_rawEntries.Count > i);
+            if (m_rawEntries[i] is ArchiveMenuEntry entry)
             {
-                continue;
+                m_screen.Add(entry);
             }
-
-            m_screen.Add(new ArchiveMenuEntry(i));
         }
 
         UIManager ui = UIManager.instance;
@@ -129,12 +141,12 @@ public sealed class ArchiveMenuController : MonoBehaviour
 
         for (int i = 5; i <= 50; i++)
         {
-            if (i == m_selectedSlotIndex)
+            AddEntry(i);
+            yield return new WaitUntil(() => m_rawEntries.Count > i);
+            if (m_rawEntries[i] is ArchiveMenuEntry entry)
             {
-                continue;
+                m_screen.Add(entry);
             }
-
-            m_screen.Add(new ArchiveMenuEntry(i));
 
             yield return null; // slight delay to avoid freezing the game
             yield return null;
@@ -146,8 +158,69 @@ public sealed class ArchiveMenuController : MonoBehaviour
             }
         }
 
+        if (m_numFilledEntries == 0)
+        {
+            // Load on an empty slot with no saves
+            statusLabel.Text.LocalizedText = "No loadable saves found";
+        }
+        else
+        {
+            statusLabel.Text.LocalizedText = "Finished loading save slots";
+        }
+
         m_isOpen = true;
         m_isTransitioning = false;
+    }
+
+    public void AddEntry(int slotIndex)
+    {
+        if (slotIndex == m_selectedSlotIndex)
+        {
+            m_rawEntries.Add(null);
+            return;
+        }
+
+        GameManager.instance.GetSaveStatsForSlot(slotIndex,
+            (stats, message) => OnSaveStatsReceived(slotIndex, stats, message));
+    }
+
+    public void OnSaveStatsReceived(int slotIndex, SaveStats? stats, string? message)
+    {
+        SfmLogger.LogInfo($"Received save stats for slot {slotIndex}: stats={stats}, message={message}");
+        bool isEmpty = stats == null && message == null;
+        if (isEmpty && m_selectedSlotIsEmpty)
+        {
+            // Can't load from an empty slot => don't add it to the list
+            m_rawEntries.Add(null);
+            return;
+        }
+
+        var entry = new ArchiveMenuEntry(slotIndex, stats, message);
+
+        entry.OnSubmit = () =>
+        {
+            if (m_selectedSlotIsEmpty)
+            {
+                SaveArchive.LoadSlot(m_selectedSlotIndex, slotIndex);
+            }
+            else if (isEmpty)
+            {
+                SaveArchive.ArchiveSlot(m_selectedSlotIndex, slotIndex);
+            }
+            else
+            {
+                SaveArchive.SwapSlots(m_selectedSlotIndex, slotIndex);
+            }
+            Close();
+        };
+
+        if (!m_shouldClose)
+        {
+            // Don't add the entry immediately, because that causes visual glitches.
+            // Only modify UI from the routine.
+            m_rawEntries.Add(entry);
+            m_numFilledEntries++;
+        }
     }
 
     public IEnumerator CloseRoutine()

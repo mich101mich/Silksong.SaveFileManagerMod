@@ -32,7 +32,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public Harmony m_harmony = null!;
 
     public List<SaveOptions> m_saveOptions = new();
-    public ArchiveMenuController m_archiveMenu = null!;
+    public ArchiveSlotSelectionMenu m_archiveMenu = null!;
 
     public void Awake()
     {
@@ -40,7 +40,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SfmLogger._logger = base.Logger;
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
 
-        m_archiveMenu = gameObject.AddComponent<ArchiveMenuController>();
+        m_archiveMenu = gameObject.AddComponent<ArchiveSlotSelectionMenu>();
 
         m_harmony = new Harmony($"harmony-{Id}");
         m_harmony.PatchAll(typeof(SaveFileManagerPlugin));

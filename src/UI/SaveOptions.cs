@@ -12,7 +12,7 @@ public sealed class SaveOptions : MonoBehaviour
     public InputHandler m_inputHandler = null!;
 
     public SaveSlotActionRow m_actionRow = null!;
-    public ArchiveMenuController m_archiveMenu = null!;
+    public ArchiveSlotSelectionMenu m_archiveMenu = null!;
 
     public Text m_nameLabel = null!;
     public TextInput<string> m_renameInput = null!;
