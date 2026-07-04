@@ -56,19 +56,12 @@ public sealed class SaveOptions : MonoBehaviour
     {
         if (m_isRenaming && m_inputHandler.acceptingInput)
         {
-            bool submitPressed = m_inputHandler.inputActions.MenuSubmit.WasPressed
-                || Input.GetKeyDown(KeyCode.Return)
-                || Input.GetKeyDown(KeyCode.KeypadEnter);
-
-            bool cancelPressed = m_inputHandler.inputActions.MenuCancel.WasPressed
-                || Input.GetKeyDown(KeyCode.Escape);
-
-            if (cancelPressed)
+            if (m_inputHandler.inputActions.MenuCancel.WasPressed)
             {
                 m_inputHandler.inputActions.MenuCancel.ClearInputState();
                 CloseRenameEditor(saveChanges: false);
             }
-            else if (submitPressed)
+            else if (m_inputHandler.inputActions.MenuSubmit.WasPressed)
             {
                 m_inputHandler.inputActions.MenuSubmit.ClearInputState();
                 CloseRenameEditor(saveChanges: true);
@@ -140,7 +133,13 @@ public sealed class SaveOptions : MonoBehaviour
 
         if (saveChanges)
         {
+            UIManager.instance.uiAudioPlayer.PlaySubmit();
+
             SaveName.SetSlotName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
+        }
+        else
+        {
+            UIManager.instance.uiAudioPlayer.PlayCancel();
         }
 
         m_isRenaming = false;

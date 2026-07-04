@@ -28,34 +28,11 @@ public class SfmLogger
 [BepInDependency(Silksong.ModMenu.ModMenuPlugin.Id)]
 public partial class SaveFileManagerPlugin : BaseUnityPlugin
 {
-    public sealed class MockArchiveEntry
-    {
-        public MockArchiveEntry(string id, string label, string details)
-        {
-            Id = id;
-            Label = label;
-            Details = details;
-        }
-
-        public string Id { get; }
-        public string Label { get; }
-        public string Details { get; }
-    }
-
     public static SaveFileManagerPlugin s_instance = null!;
     public Harmony m_harmony = null!;
 
     public List<SaveOptions> m_saveOptions = new();
     public ArchiveMenuController m_archiveMenu = null!;
-
-    public List<MockArchiveEntry> m_mockArchiveEntries = new()
-    {
-        new MockArchiveEntry("archive-01", "Archive A", "Moss Grotto - 03:21"),
-        new MockArchiveEntry("archive-02", "Archive B", "Citadel - 12:44"),
-        new MockArchiveEntry("archive-03", "Archive C", "Greymoor - 25:08")
-    };
-
-    public IReadOnlyList<MockArchiveEntry> MockArchiveEntries => m_mockArchiveEntries;
 
     public void Awake()
     {
@@ -63,7 +40,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SfmLogger._logger = base.Logger;
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
 
-        m_archiveMenu = new ArchiveMenuController(this);
+        m_archiveMenu = gameObject.AddComponent<ArchiveMenuController>();
 
         m_harmony = new Harmony($"harmony-{Id}");
         m_harmony.PatchAll(typeof(SaveFileManagerPlugin));
@@ -79,8 +56,6 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
             UnityEngine.Object.Destroy(saveOption);
         }
         m_saveOptions.Clear();
-
-        m_archiveMenu.Dispose();
 
         s_instance = null!;
         SfmLogger._logger = null;

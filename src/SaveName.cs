@@ -21,6 +21,23 @@ public class SaveName
     }
 
     /// <summary>
+    /// Gets the name for a save slot, loading it from disk if necessary. Returns false if no name is set.
+    /// </summary>
+    /// <param name="slotIndex">The index of the save slot.</param>
+    /// <param name="name">The name of the save slot, if set.</param>
+    /// <returns>True if a name is set for the slot; otherwise, false.</returns>
+    public static bool GetOrLoadSlotName(int slotIndex, out string name)
+    {
+        if (TryGetSlotName(slotIndex, out name!))
+        {
+            return true;
+        }
+
+        ReloadSlot(slotIndex);
+        return TryGetSlotName(slotIndex, out name!);
+    }
+
+    /// <summary>
     /// Sets the name for a save slot and saves it to disk.
     /// </summary>
     /// <param name="slotIndex">The index of the save slot.</param>
