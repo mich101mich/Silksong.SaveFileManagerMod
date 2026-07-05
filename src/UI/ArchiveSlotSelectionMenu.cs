@@ -14,12 +14,6 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
 {
     public ScrollingMenuScreen? m_screen;
 
-    public static readonly MethodInfo? s_invokeOnShow = typeof(AbstractMenuScreen)
-        .GetMethod("InvokeOnShow", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    public static readonly MethodInfo? s_invokeOnHide = typeof(AbstractMenuScreen)
-        .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic);
-
     public int m_selectedSlotIndex = -1;
     public bool m_selectedSlotIsEmpty = false;
     public string m_slotSummary = "";
@@ -186,7 +180,6 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
 
     public void OnSaveStatsReceived(int slotIndex, SaveStats? stats, string? message)
     {
-        SfmLogger.LogInfo($"Received save stats for slot {slotIndex}: stats={stats}, message={message}");
         bool isEmpty = stats == null && message == null;
         if (isEmpty && m_selectedSlotIsEmpty)
         {
@@ -212,6 +205,7 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
                 SaveArchive.SwapSlots(m_selectedSlotIndex, slotIndex);
             }
             Close();
+            UIManager.instance.ReloadSaves();
         };
 
         if (!m_shouldClose)
@@ -245,23 +239,19 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
         m_isTransitioning = false;
     }
 
+    public static readonly MethodInfo s_invokeOnShow = typeof(AbstractMenuScreen)
+        .GetMethod("InvokeOnShow", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+    public static readonly MethodInfo s_invokeOnHide = typeof(AbstractMenuScreen)
+        .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
     public static void InvokeScreenOnShow(AbstractMenuScreen screen)
     {
-        if (s_invokeOnShow == null)
-        {
-            return;
-        }
-
         s_invokeOnShow.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Forwards });
     }
 
     public static void InvokeScreenOnHide(AbstractMenuScreen screen)
     {
-        if (s_invokeOnHide == null)
-        {
-            return;
-        }
-
         s_invokeOnHide.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Backwards });
     }
 }

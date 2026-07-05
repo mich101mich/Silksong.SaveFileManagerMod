@@ -12,15 +12,28 @@ public class SfmLogger
 {
     public static ManualLogSource? _logger;
 
-    public static void LogInfo(string message)
+    public static void Log(LogLevel level, string message)
     {
         if (_logger == null)
         {
             return;
         }
-        string timestamp = System.DateTime.Now.ToString("HH:mm:ss");
+        string timestamp = System.DateTime.Now.ToString("HH:mm:ss.fff");
         string fullMessage = $"[{timestamp}] {message}";
-        _logger?.LogInfo(fullMessage);
+        _logger?.Log(level, fullMessage);
+    }
+
+    public static void LogInfo(string message)
+    {
+        Log(LogLevel.Info, message);
+    }
+    public static void LogWarning(string message)
+    {
+        Log(LogLevel.Warning, message);
+    }
+    public static void LogError(string message)
+    {
+        Log(LogLevel.Error, message);
     }
 };
 
@@ -39,6 +52,21 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         s_instance = this;
         SfmLogger._logger = base.Logger;
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
+
+        // Check if this mod can work
+        if (Platform.Current is not DesktopPlatform platform)
+        {
+            SfmLogger.LogError($"SaveFileManagerMod: Unsupported platform {Platform.Current}. This mod only works on desktop platforms.");
+            return;
+        }
+        var onlineSubsystem = typeof(DesktopPlatform)
+            .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetValue(platform) as DesktopOnlineSubsystem;
+        if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
+        {
+            SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
+            return;
+        }
 
         m_archiveMenu = gameObject.AddComponent<ArchiveSlotSelectionMenu>();
 
