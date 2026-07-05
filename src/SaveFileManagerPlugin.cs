@@ -44,7 +44,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public static SaveFileManagerPlugin s_instance = null!;
     public Harmony m_harmony = null!;
 
-    public List<SaveOptions> m_saveOptions = new();
+    public List<SaveOptions> m_saveOptions = new List<SaveOptions>();
     public ArchiveSlotSelectionMenu m_archiveMenu = null!;
 
     public void Awake()

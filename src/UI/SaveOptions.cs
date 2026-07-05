@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public sealed class SaveOptions : MonoBehaviour
+public class SaveOptions : MonoBehaviour
 {
     public SaveSlotButton m_saveSlotButton = null!;
     public InputHandler m_inputHandler = null!;
@@ -157,12 +157,15 @@ public sealed class SaveOptions : MonoBehaviour
         label.raycastTarget = false;
         label.rectTransform.anchoredPosition = m_saveSlotButton.locationText.rectTransform.anchoredPosition + new Vector2(0f, 58f);
         label.gameObject.SetActive(value: false);
+
+        // TODO: Have this also be displayed on "Defeated" files
+
         return label;
     }
 
     public TextInput<string> BuildRenameEditor()
     {
-        TextInput<string> input = new("", TextModels.ForStrings(), "");
+        var input = new TextInput<string>("", TextModels.ForStrings(), "");
         input.Container.name = "SFM-RenameEditor";
 
         RectTransform slotRect = m_saveSlotButton.GetComponent<RectTransform>();

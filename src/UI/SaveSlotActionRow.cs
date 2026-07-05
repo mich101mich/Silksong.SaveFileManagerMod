@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public sealed class SaveSlotActionRow : IDisposable
+public class SaveSlotActionRow : IDisposable
 {
     public readonly SaveSlotButton m_slot;
     public readonly Navigation m_originalRestoreNav;
@@ -39,6 +39,8 @@ public sealed class SaveSlotActionRow : IDisposable
             ?? throw new Exception("Could not find clear save button component");
 
         m_originalClearNav = clearButton.navigation;
+
+        // TODO: Add custom icons
 
         m_restore = new ActionButtonWrapper(restoreButton, isOriginal: true);
         m_rename = new ActionButtonWrapper(CloneIconButton("SFM-RenameButton", onRename), isOriginal: false);

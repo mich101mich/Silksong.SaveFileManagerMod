@@ -12,6 +12,8 @@ public class ArchiveMenuEntry : TextButton
         : base(MakeTitle(slotIndex, stats, message), message ?? "")
     {
         m_index = slotIndex;
+
+        // TODO: Add mini preview of the save file (like in the main menu)
     }
 
     public static string MakeTitle(int slotIndex, SaveStats? stats, string? message)

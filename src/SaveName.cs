@@ -6,7 +6,7 @@ namespace SaveFileManagerMod;
 
 public class SaveName
 {
-    public static Dictionary<int, string> Names = new();
+    public static Dictionary<int, string> Names = new Dictionary<int, string>();
 
     /// <summary>
     /// Tries to get the name for a save slot. Returns false if no name is set.

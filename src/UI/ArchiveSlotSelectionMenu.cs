@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
+public class ArchiveSlotSelectionMenu : MonoBehaviour
 {
     public ScrollingMenuScreen? m_screen;
 
@@ -24,7 +24,7 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
 
     public bool IsOpen => m_isOpen || m_isTransitioning;
 
-    public List<ArchiveMenuEntry?> m_rawEntries = new();
+    public List<ArchiveMenuEntry?> m_rawEntries = new List<ArchiveMenuEntry?>();
     public int m_numFilledEntries = 0;
 
     public void OnDestroy()
@@ -101,7 +101,7 @@ public sealed class ArchiveSlotSelectionMenu : MonoBehaviour
 
         m_screen?.Dispose();
 
-        m_screen = new(m_slotSummary);
+        m_screen = new ScrollingMenuScreen(m_slotSummary);
         m_screen.AllowGoBack = false;
         m_screen.OnGoBack += Close;
 
