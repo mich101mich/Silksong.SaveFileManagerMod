@@ -10,13 +10,12 @@ using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public class ArchiveSlotSelectionMenu : MonoBehaviour
+public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 {
     public ScrollingMenuScreen? m_screen;
 
     public int m_selectedSlotIndex = -1;
     public bool m_selectedSlotIsEmpty = false;
-    public string m_slotSummary = "";
 
     public bool m_isOpen = false;
     public bool m_isTransitioning = false;
@@ -48,19 +47,6 @@ public class ArchiveSlotSelectionMenu : MonoBehaviour
 
         m_selectedSlotIndex = slot.SaveSlotIndex;
         m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
-
-        if (m_selectedSlotIsEmpty)
-        {
-            m_slotSummary = $"Load into Slot {slot.SaveSlotIndex}";
-        }
-        else if (SaveName.TryGetSlotName(slot.SaveSlotIndex, out string slotName))
-        {
-            m_slotSummary = $"Archive/Replace {slotName} (Slot {slot.SaveSlotIndex})";
-        }
-        else
-        {
-            m_slotSummary = $"Archive/Replace Slot {slot.SaveSlotIndex}";
-        }
 
         StartCoroutine(OpenRoutine());
     }
@@ -101,11 +87,20 @@ public class ArchiveSlotSelectionMenu : MonoBehaviour
 
         m_screen?.Dispose();
 
-        m_screen = new ScrollingMenuScreen(m_slotSummary);
+        var title = m_selectedSlotIsEmpty
+            ? Strings.TitleLoadIntoEmpty // "Load from archive"
+            : Strings.TitleArchiveReplace; // "Archive/Replace"
+
+        m_screen = new ScrollingMenuScreen(title);
         m_screen.AllowGoBack = false;
         m_screen.OnGoBack += Close;
 
-        var statusLabel = new TextLabel("Loading save slots...");
+        var slotInfo = SaveName.TryGetSlotName(m_selectedSlotIndex, out string slotName)
+            ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
+            : Strings.UnnamedSlotInfo(index: m_selectedSlotIndex); // $"Target: Slot {index}."
+        m_screen.Add(new TextLabel(slotInfo));
+
+        var statusLabel = new TextLabel(Strings.LoadingText); // "Loading save slots..."
         m_screen.Add(statusLabel);
 
         m_rawEntries.Clear();
@@ -152,15 +147,9 @@ public class ArchiveSlotSelectionMenu : MonoBehaviour
             }
         }
 
-        if (m_numFilledEntries == 0)
-        {
-            // Load on an empty slot with no saves
-            statusLabel.Text.LocalizedText = "No loadable saves found";
-        }
-        else
-        {
-            statusLabel.Text.LocalizedText = "Finished loading save slots";
-        }
+        statusLabel.Text.LocalizedText = m_numFilledEntries == 0
+            ? Strings.NoLoadableSavesFound // "No loadable saves found"
+            : Strings.FinishedLoadingSaveSlots; // "Finished loading save slots"
 
         m_isOpen = true;
         m_isTransitioning = false;

@@ -1,0 +1,9 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Aus Archiv laden",
+    "ArchiveSlotSelectionMenu.TitleArchiveReplace": "Archivieren / Ersetzen",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Ziel: Slot {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Ziel: Slot {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Lade Spielstände...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "Keine ladbaren Spielstände gefunden",
+    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Laden der Spielstände abgeschlossen"
+}

@@ -39,6 +39,7 @@ public class SfmLogger
 
 [BepInAutoPlugin(id: "io.github.mich101mich.savefilemanagermod")]
 [BepInDependency(Silksong.ModMenu.ModMenuPlugin.Id)]
+[BepInDependency("org.silksong-modding.i18n")]
 public partial class SaveFileManagerPlugin : BaseUnityPlugin
 {
     public static SaveFileManagerPlugin s_instance = null!;
@@ -54,19 +55,20 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
 
         // Check if this mod can work
-        if (Platform.Current is not DesktopPlatform platform)
-        {
-            SfmLogger.LogError($"SaveFileManagerMod: Unsupported platform {Platform.Current}. This mod only works on desktop platforms.");
-            return;
-        }
-        var onlineSubsystem = typeof(DesktopPlatform)
-            .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-            .GetValue(platform) as DesktopOnlineSubsystem;
-        if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
-        {
-            SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
-            return;
-        }
+        // TODO: do this check later, after Platform.Current is initialized
+        // if (Platform.Current is not DesktopPlatform platform)
+        // {
+        //     SfmLogger.LogError($"SaveFileManagerMod: Unsupported platform {Platform.Current}. This mod only works on desktop platforms.");
+        //     return;
+        // }
+        // var onlineSubsystem = typeof(DesktopPlatform)
+        //     .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+        //     .GetValue(platform) as DesktopOnlineSubsystem;
+        // if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
+        // {
+        //     SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
+        //     return;
+        // }
 
         m_archiveMenu = gameObject.AddComponent<ArchiveSlotSelectionMenu>();
 

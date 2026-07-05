@@ -13,6 +13,11 @@
     <RepositoryUrl>https://github.com/mich101mich/Silksong.SaveFileManagerMod</RepositoryUrl>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Set the default language for I18N -->
+    <NeutralLanguage>EN</NeutralLanguage>
+  </PropertyGroup>
+
   <!-- 
     Imports silksong path properties for non-CI builds. The file should be gitignored.
     If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
@@ -55,6 +60,9 @@
     <Reference Include="TeamCherry.SharedUtils">
       <HintPath>$(SilksongDllFolder)/TeamCherry.SharedUtils.dll</HintPath>
     </Reference>
+    <Reference Include="TeamCherry.Localization">
+      <HintPath>$(SilksongDllFolder)/TeamCherry.Localization.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>$(SilksongDllFolder)/UnityEngine.dll</HintPath>
     </Reference>
@@ -86,6 +94,7 @@
     <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
     <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />
+    <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.Localization\TeamCherry.Localization.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\Assembly-CSharp\Assembly-CSharp.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine\UnityEngine.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" />
@@ -110,15 +119,16 @@
 
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
     <ItemGroup>
-      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
-      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
+      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="$(AssemblyTitle)-$(Version)/" />
+      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="$(AssemblyTitle)-$(Version)/" />
+      <Binaries Include="languages/*.json" LocalDir="languages" PackDir="$(AssemblyTitle)-$(Version)/languages" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
     </PropertyGroup>
 
     <!-- Local install -->
-    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongPluginsFolder)/$(AssemblyTitle)/%(Binaries.LocalDir)" Condition="'$(Configuration)' == 'Release' And '$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongPluginsFolder)/%(Binaries.PackDir)" Condition="'$(Configuration)' == 'Release' And '$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongScriptsFolder)/" Condition="'$(Configuration)' == 'Debug' And '$(SilksongScriptsFolder)' != '' And Exists('$(SilksongScriptsFolder)')" />
 
     <!-- Thunderstore packaging -->

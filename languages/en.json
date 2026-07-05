@@ -1,0 +1,9 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Load from archive",
+    "ArchiveSlotSelectionMenu.TitleArchiveReplace": "Archive / Replace",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Target: Slot {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Target: Slot {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Loading save slots...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "No loadable saves found",
+    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Finished loading save slots"
+}
