@@ -45,6 +45,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public static SaveFileManagerPlugin s_instance = null!;
     public Harmony m_harmony = null!;
 
+    public bool? m_isModCompatible = null;
     public List<SaveOptions> m_saveOptions = new List<SaveOptions>();
     public ArchiveSlotSelectionMenu m_archiveMenu = null!;
 
@@ -53,22 +54,6 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         s_instance = this;
         SfmLogger._logger = base.Logger;
         SfmLogger.LogInfo($"Plugin {Name} ({Id}) v{Version} has loaded!");
-
-        // Check if this mod can work
-        // TODO: do this check later, after Platform.Current is initialized
-        // if (Platform.Current is not DesktopPlatform platform)
-        // {
-        //     SfmLogger.LogError($"SaveFileManagerMod: Unsupported platform {Platform.Current}. This mod only works on desktop platforms.");
-        //     return;
-        // }
-        // var onlineSubsystem = typeof(DesktopPlatform)
-        //     .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-        //     .GetValue(platform) as DesktopOnlineSubsystem;
-        // if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
-        // {
-        //     SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
-        //     return;
-        // }
 
         m_archiveMenu = gameObject.AddComponent<ArchiveSlotSelectionMenu>();
 
@@ -89,6 +74,31 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
 
         s_instance = null!;
         SfmLogger._logger = null;
+    }
+
+    public bool IsModCompatible()
+    {
+        if (m_isModCompatible == null)
+        {
+            if (Platform.Current is DesktopPlatform platform)
+            {
+                var onlineSubsystem = typeof(DesktopPlatform)
+                    .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .GetValue(platform) as DesktopOnlineSubsystem;
+                if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
+                {
+                    SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
+                    m_isModCompatible = false;
+                }
+                m_isModCompatible = true;
+            }
+            else
+            {
+                SfmLogger.LogError($"SaveFileManagerMod: Unsupported platform {Platform.Current}. This mod only works on desktop platforms.");
+                m_isModCompatible = false;
+            }
+        }
+        return m_isModCompatible.Value;
     }
 
     // ================================================================================
@@ -113,6 +123,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     public void initUi()
     {
         if (m_saveOptions.Count > 0)
+        {
+            return;
+        }
+
+        if (!IsModCompatible())
         {
             return;
         }
@@ -150,6 +165,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.Prepare))]
     public static void SaveSlotButton_Prepare_Postfix(SaveSlotButton __instance)
     {
+        if (!s_instance.IsModCompatible())
+        {
+            return;
+        }
+
         // Function called on startup and when changing pages with the MoreSaves mod
         SaveName.ReloadSlot(__instance.SaveSlotIndex);
     }
@@ -158,6 +178,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.UpdateSaveFileState))]
     public static void SaveSlotButton_UpdateSaveFileState_Postfix(SaveSlotButton __instance)
     {
+        if (!s_instance.IsModCompatible())
+        {
+            return;
+        }
+
         // Function called when the select profile menu is opened
         SaveName.ReloadSlot(__instance.SaveSlotIndex);
     }
@@ -166,6 +191,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(SaveSlotButton), "ChangeSaveFileState")]
     public static void SaveSlotButton_ChangeSaveFileState_Prefix(SaveSlotButton __instance, SaveSlotButton.SaveFileStates nextSaveFileState)
     {
+        if (!s_instance.IsModCompatible())
+        {
+            return;
+        }
+
         if (nextSaveFileState == SaveSlotButton.SaveFileStates.Empty)
         {
             // Save was erased, or file is empty/nonexistent. Clear the name for this slot.
