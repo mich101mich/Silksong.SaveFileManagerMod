@@ -40,11 +40,9 @@ public class SaveSlotActionRow : IDisposable
 
         m_originalClearNav = clearButton.navigation;
 
-        // TODO: Add custom icons
-
         m_restore = new ActionButtonWrapper(restoreButton, isOriginal: true);
-        m_rename = new ActionButtonWrapper(CloneIconButton("SFM-RenameButton", onRename), isOriginal: false);
-        m_archive = new ActionButtonWrapper(CloneIconButton("SFM-ArchiveButton", onArchive), isOriginal: false);
+        m_rename = new ActionButtonWrapper(CloneIconButton("Rename", onRename), isOriginal: false);
+        m_archive = new ActionButtonWrapper(CloneIconButton("Archive", onArchive), isOriginal: false);
         m_clear = new ActionButtonWrapper(clearButton, isOriginal: true);
 
         m_buttons = new List<ActionButtonWrapper> { m_restore, m_rename, m_archive, m_clear };
@@ -120,7 +118,7 @@ public class SaveSlotActionRow : IDisposable
     {
         GameObject template = m_slot.clearSaveButton.gameObject;
         GameObject root = UnityEngine.Object.Instantiate(template, template.transform.parent);
-        root.name = name;
+        root.name = $"SFM-{name}Button";
 
         // Note that a GameObject can only have one Selectable component, so we need to delete the ClearSaveButton
         // before adding the SaveSlotActionButton. This means we have to manually store and copy all relevant properties.
@@ -166,15 +164,7 @@ public class SaveSlotActionRow : IDisposable
         replacement.rightCursor = rightCursor;
         replacement.selectIcon = selectIcon;
 
-        // unique properties
-        replacement.onSubmit = onSubmit;
-        replacement.buttonType = MenuButton.MenuButtonType.Activate;
-
-        var toRemove = replacement.GetComponent<ZeroAlphaOnStart>();
-        if (toRemove != null)
-        {
-            UnityEngine.Object.Destroy(toRemove);
-        }
+        replacement.Initialize(name, onSubmit);
 
         return replacement;
     }
