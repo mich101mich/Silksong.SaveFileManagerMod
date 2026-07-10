@@ -12,6 +12,8 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 {
 	public Animator? selectIcon;
 
+	public Image? m_iconImage;
+
 	public Sprite? m_iconIdle;
 	public Sprite? m_iconTransition;
 	public Sprite? m_iconSelected;
@@ -39,9 +41,8 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		var icon = transform.Find("Trash Icon")!;
 		icon.name = $"{assetName} Icon";
 
-		var image = icon.gameObject.GetComponent<UnityEngine.UI.Image>()!;
-		image.sprite = m_iconIdle;
-		image.overrideSprite = m_iconIdle;
+		m_iconImage = icon.gameObject.GetComponent<Image>();
+		m_iconImage!.overrideSprite = m_iconIdle;
 	}
 
 	public override void OnMove(AxisEventData eventData)
@@ -88,10 +89,8 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		base.OnSelect(eventData);
 		if (GetComponent<CanvasGroup>().interactable)
 		{
-			if ((bool)selectIcon)
-			{
-				selectIcon.SetBool(_isSelectedProp, value: true);
-			}
+			selectIcon?.SetBool(_isSelectedProp, value: true);
+			StartCoroutine(SelectAnimation());
 		}
 		else
 		{
@@ -101,16 +100,30 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 
 	protected override void OnDeselected(BaseEventData eventData)
 	{
-		if ((bool)selectIcon)
-		{
-			selectIcon.SetBool(_isSelectedProp, value: false);
-		}
+		selectIcon?.SetBool(_isSelectedProp, value: false);
+		StartCoroutine(DeselectAnimation());
 	}
 
 	public IEnumerator SelectAfterFrame(GameObject obj)
 	{
 		yield return new WaitForEndOfFrame();
 		EventSystem.current.SetSelectedGameObject(obj);
+	}
+
+	public IEnumerator SelectAnimation()
+	{
+		yield return new WaitForSeconds(0.06f);
+		m_iconImage!.overrideSprite = m_iconTransition;
+		yield return new WaitForSeconds(0.06f);
+		m_iconImage!.overrideSprite = m_iconSelected;
+	}
+
+	public IEnumerator DeselectAnimation()
+	{
+		yield return new WaitForSeconds(0.06f);
+		m_iconImage!.overrideSprite = m_iconTransition;
+		yield return new WaitForSeconds(0.06f);
+		m_iconImage!.overrideSprite = m_iconIdle;
 	}
 
 	public static bool TryNavigateSkippingDisabled(AxisEventData eventData, Selectable start)
@@ -168,7 +181,7 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 				return null;
 			}
 
-			return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+			return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 70);
 		}
 	}
 }
