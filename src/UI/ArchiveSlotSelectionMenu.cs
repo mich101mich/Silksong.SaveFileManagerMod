@@ -85,6 +85,10 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_isTransitioning = true;
         m_shouldClose = false;
 
+        // Prevent input (mostly cancelling) until the menu is open.
+        // Input will be resumed by ui.ShowMenu();
+        GameManager.instance.inputHandler.StopUIInput();
+
         m_screen?.Dispose();
 
         var title = m_selectedSlotIsEmpty
@@ -209,6 +213,10 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
     public IEnumerator CloseRoutine()
     {
         m_isTransitioning = true;
+
+        // Prevent input (mostly double cancel) until the menu is closed.
+        // Input will be resumed by ui.GoToProfileMenu();
+        GameManager.instance.inputHandler.StopUIInput();
 
         UIManager ui = UIManager.instance;
 
