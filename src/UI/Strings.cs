@@ -4,13 +4,22 @@ using TeamCherry.Localization;
 
 namespace SaveFileManagerMod.UI;
 
+using LT = LocalizedText; // to shorten declarations
+
 public class StringHelper
 {
-    public static LocalizedText Get(string key) => LocalizedText.Key(new LocalisedString($"Mods.{SaveFileManagerPlugin.Id}", key));
+    public static string ModSheet => $"Mods.{SaveFileManagerPlugin.Id}";
 
-    public static LocalizedText Get(string key, object args)
+    public static LocalizedText Get(string key, string fallback)
     {
-        string text = Language.Get(key, $"Mods.{SaveFileManagerPlugin.Id}");
+        return Language.Has(key, ModSheet)
+            ? LocalizedText.Key(new LocalisedString(ModSheet, key))
+            : LocalizedText.Raw(fallback);
+    }
+
+    public static LocalizedText Get(string key, string fallback, object args)
+    {
+        string text = Language.Has(key, ModSheet) ? Language.Get(key, ModSheet) : fallback;
         foreach (var property in args.GetType().GetProperties())
         {
             text = text.Replace($"{{{property.Name}}}", property.GetValue(args).ToString());
@@ -23,26 +32,21 @@ public partial class ArchiveSlotSelectionMenu
 {
     public class Strings : StringHelper
     {
-        // "Load from archive"
-        public static LocalizedText TitleLoadIntoEmpty => Get("ArchiveSlotSelectionMenu.TitleLoadIntoEmpty");
-
-        // "Archive/Replace"
-        public static LocalizedText TitleArchiveReplace => Get("ArchiveSlotSelectionMenu.TitleArchiveReplace");
-
-        // $"Target: Slot {index}. \"{name}\""
-        public static LocalizedText NamedSlotInfo(string name, int index) => Get("ArchiveSlotSelectionMenu.NamedSlotInfo", new { name, index });
-
-        // $"Target: Slot {index}."
-        public static LocalizedText UnnamedSlotInfo(int index) => Get("ArchiveSlotSelectionMenu.UnnamedSlotInfo", new { index });
-
-        // "Loading save slots..."
-        public static LocalizedText LoadingText => Get("ArchiveSlotSelectionMenu.LoadingText");
-
-        // "No loadable saves found"
-        public static LocalizedText NoLoadableSavesFound => Get("ArchiveSlotSelectionMenu.NoLoadableSavesFound");
-
-        // "Finished loading save slots"
-        public static LocalizedText FinishedLoadingSaveSlots => Get("ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots");
+        public static LT TitleLoadIntoEmpty => Get("ArchiveSlotSelectionMenu.TitleLoadIntoEmpty", "Load from archive");
+        public static LT TitleArchiveReplace => Get("ArchiveSlotSelectionMenu.TitleArchiveReplace", "Archive/Replace");
+        public static LT NamedSlotInfo(string name, int index) => Get("ArchiveSlotSelectionMenu.NamedSlotInfo", "Target: Slot {index}. \"{name}\"", new { name, index });
+        public static LT UnnamedSlotInfo(int index) => Get("ArchiveSlotSelectionMenu.UnnamedSlotInfo", "Target: Slot {index}.", new { index });
+        public static LT LoadingText => Get("ArchiveSlotSelectionMenu.LoadingText", "Loading save slots...");
+        public static LT NoLoadableSavesFound => Get("ArchiveSlotSelectionMenu.NoLoadableSavesFound", "No loadable saves found");
+        public static LT FinishedLoadingSaveSlots => Get("ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots", "Finished loading save slots");
     }
 }
 
+public partial class ArchiveMenuEntry
+{
+    public class Strings : StringHelper
+    {
+        public static LT Error => Get("ArchiveMenuEntry.Error", "Error");
+        public static LT Empty => Get("ArchiveMenuEntry.Empty", "Empty");
+    }
+}

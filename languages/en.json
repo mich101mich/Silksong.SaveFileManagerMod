@@ -5,5 +5,7 @@
     "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Target: Slot {index}.",
     "ArchiveSlotSelectionMenu.LoadingText": "Loading save slots...",
     "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "No loadable saves found",
-    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Finished loading save slots"
+    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Finished loading save slots",
+    "ArchiveMenuEntry.Error": "Error",
+    "ArchiveMenuEntry.Empty": "Empty"
 }

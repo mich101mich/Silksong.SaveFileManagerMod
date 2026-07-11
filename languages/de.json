@@ -5,5 +5,7 @@
     "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Ziel: Slot {index}.",
     "ArchiveSlotSelectionMenu.LoadingText": "Lade Spielstände...",
     "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "Keine ladbaren Spielstände gefunden",
-    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Laden der Spielstände abgeschlossen"
+    "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Laden der Spielstände abgeschlossen",
+    "ArchiveMenuEntry.Error": "Fehler",
+    "ArchiveMenuEntry.Empty": "Leer"
 }

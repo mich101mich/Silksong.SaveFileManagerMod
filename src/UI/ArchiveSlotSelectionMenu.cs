@@ -26,6 +26,8 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
     public List<ArchiveMenuEntry?> m_rawEntries = new List<ArchiveMenuEntry?>();
     public int m_numFilledEntries = 0;
 
+    public SaveSlotButton m_templateSlotButton = null!;
+
     public void OnDestroy()
     {
         if (m_screen != null)
@@ -47,6 +49,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         m_selectedSlotIndex = slot.SaveSlotIndex;
         m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
+        m_templateSlotButton = slot;
 
         StartCoroutine(OpenRoutine());
     }
@@ -181,7 +184,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             return;
         }
 
-        var entry = new ArchiveMenuEntry(slotIndex, stats, message);
+        var entry = new ArchiveMenuEntry(slotIndex, stats, message, m_templateSlotButton);
 
         entry.OnSubmit = () =>
         {
