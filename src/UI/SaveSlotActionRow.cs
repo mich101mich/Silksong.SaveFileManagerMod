@@ -125,6 +125,7 @@ public class SaveSlotActionRow : IDisposable
         ClearSaveButton original = root.GetComponent<ClearSaveButton>()
             ?? throw new Exception($"Could not find MenuButton on {root.name}");
 
+        // From Selectable
         var navigation = original.navigation;
         var interactable = original.interactable;
         var transition = original.transition;
@@ -132,14 +133,19 @@ public class SaveSlotActionRow : IDisposable
         var colors = original.colors;
         var spriteState = original.spriteState;
 
+        // From MenuSelectable
         var cancelAction = original.cancelAction;
         var playSubmitSound = original.playSubmitSound;
         var menuSubmitVibration = original.menuSubmitVibration;
         var menuCancelVibration = original.menuCancelVibration;
-
         var leftCursor = original.leftCursor;
         var rightCursor = original.rightCursor;
 
+        // From MenuButton
+        var buttonType = original.buttonType;
+        var flashEffect = original.flashEffect;
+
+        // From ClearSaveButton
         var selectIcon = typeof(ClearSaveButton)
             .GetField("selectIcon", BindingFlags.NonPublic | BindingFlags.Instance)!
             .GetValue(original) as Animator
@@ -159,9 +165,12 @@ public class SaveSlotActionRow : IDisposable
         replacement.playSubmitSound = playSubmitSound;
         replacement.menuSubmitVibration = menuSubmitVibration;
         replacement.menuCancelVibration = menuCancelVibration;
-
         replacement.leftCursor = leftCursor;
         replacement.rightCursor = rightCursor;
+
+        replacement.buttonType = buttonType;
+        replacement.flashEffect = flashEffect;
+
         replacement.selectIcon = selectIcon;
 
         replacement.Initialize(name, onSubmit);
