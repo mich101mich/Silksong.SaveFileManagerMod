@@ -34,9 +34,9 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		}
 
 		var assembly = Assembly.GetExecutingAssembly();
-		m_iconIdle = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_01.png");
-		m_iconTransition = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_02.png");
-		m_iconSelected = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_03.png");
+		m_iconIdle = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_01_idle.png");
+		m_iconTransition = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_02_transition.png");
+		m_iconSelected = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_03_selected.png");
 
 		var icon = transform.Find("Trash Icon")!;
 		icon.name = $"{assetName} Icon";

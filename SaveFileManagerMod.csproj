@@ -117,12 +117,12 @@
 
   <ItemGroup>
     <Folder Remove="thunderstore/temp;thunderstore/dist" />
-    <EmbeddedResource Include="assets\finished\Archive_01.png" />
-    <EmbeddedResource Include="assets\finished\Archive_02.png" />
-    <EmbeddedResource Include="assets\finished\Archive_03.png" />
-    <EmbeddedResource Include="assets\finished\Rename_01.png" />
-    <EmbeddedResource Include="assets\finished\Rename_02.png" />
-    <EmbeddedResource Include="assets\finished\Rename_03.png" />
+    <EmbeddedResource Include="assets\finished\Archive_01_idle.png" />
+    <EmbeddedResource Include="assets\finished\Archive_02_transition.png" />
+    <EmbeddedResource Include="assets\finished\Archive_03_selected.png" />
+    <EmbeddedResource Include="assets\finished\Rename_01_idle.png" />
+    <EmbeddedResource Include="assets\finished\Rename_02_transition.png" />
+    <EmbeddedResource Include="assets\finished\Rename_03_selected.png" />
     <None Include="README.md" Pack="True" PackagePath="README.md" />
     <None Include="thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
   </ItemGroup>
