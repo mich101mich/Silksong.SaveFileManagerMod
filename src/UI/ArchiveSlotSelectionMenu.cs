@@ -101,6 +101,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_screen = new ScrollingMenuScreen(title);
         m_screen.AllowGoBack = false;
         m_screen.OnGoBack += Close;
+        m_screen.Content.VerticalSpacing = ArchiveMenuEntry.SLOT_TOTAL_HEIGHT;
 
         var slotInfo = SaveName.TryGetSlotName(m_selectedSlotIndex, out string slotName)
             ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
@@ -108,7 +109,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_screen.Add(new TextLabel(slotInfo));
 
         var statusLabel = new TextLabel(Strings.LoadingText); // "Loading save slots..."
-        m_screen.Add(statusLabel);
+        m_screen.Add(statusLabel); // TODO: These also have full vertical spacing
 
         m_rawEntries.Clear();
         m_rawEntries.Add(null); // index 0 is unused

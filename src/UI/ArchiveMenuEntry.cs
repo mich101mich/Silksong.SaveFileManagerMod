@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Silksong.ModMenu.Elements;
 using TeamCherry.Localization;
 using UnityEngine;
@@ -11,6 +12,13 @@ namespace SaveFileManagerMod.UI;
 
 public partial class ArchiveMenuEntry : TextButton
 {
+    public static readonly float SLOT_TEXT_HEIGHT = SpacingConstants.VSPACE_SMALL;
+    public static readonly float SLOT_PREVIEW_HEIGHT = 140f;
+    public static readonly float SLOT_TOTAL_HEIGHT = SLOT_TEXT_HEIGHT + SLOT_PREVIEW_HEIGHT;
+
+    public SaveProfileHealthBar? m_healthSlots;
+    public SaveProfileSilkBar? m_silkBar;
+
     public ArchiveMenuEntry(int slotIndex, SaveStats? stats, string? message, SaveSlotButton template)
         : base(Init(slotIndex, stats, message), message ?? "")
     {
@@ -21,24 +29,53 @@ public partial class ArchiveMenuEntry : TextButton
         const float arrowWidth = 164f;
         const float slotWidth = totalWidth - (arrowWidth * 2f);
 
-        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, 125f);
+        // Layout:
+        // +-------------------------------------------------------------------------------+ ---
+        // | <<< <N>. <Slot Name>                                                      >>> |  | SLOT_TEXT_HEIGHT
+        // |     [     ]                         R 1234                                    | ---
+        // |     [Crest] M M M M M  +||||---+             91%    12H 15M   The Abyss       |  | SLOT_PREVIEW_HEIGHT
+        // |     [     ]                         S 800                                     |  |
+        // +-------------------------------------------------------------------------------+ ---
 
-        var menuButton = base.ButtonText.gameObject;
+        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, SLOT_TOTAL_HEIGHT);
 
-        var oldFitter = menuButton.GetComponent<ContentSizeFitter>()!;
+        var textButton = FindChildObject(base.Container, "TextButton")!;
+        textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, SLOT_TOTAL_HEIGHT);
+
+        var nameText = base.ButtonText.gameObject;
+
+        var oldFitter = nameText.GetComponent<ContentSizeFitter>()!;
         UnityEngine.Object.Destroy(oldFitter);
 
-        menuButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, 125f);
+        // Name: Top-Aligned against the parent, full width.
+        var nameTransform = nameText.GetComponent<RectTransform>()!;
+        nameTransform.pivot = new Vector2(0.5f, 1f);
+        nameTransform.anchorMin = new Vector2(0.5f, 1f);
+        nameTransform.anchorMax = new Vector2(0.5f, 1f);
+        nameTransform.anchoredPosition = new Vector2(0f, 0f);
+        nameTransform.sizeDelta = new Vector2(slotWidth, SLOT_TEXT_HEIGHT);
 
         base.ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
 
-        if (message == null && stats != null)
+        if (message != null || stats == null)
         {
-            var target = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
-
-            var entry = target.AddComponent<ArchiveSaveSlotButton>();
-            entry.Initialize(slotIndex, stats, template);
+            return;
         }
+
+        var preview = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
+
+        var oldMove = preview.GetComponent<ChangePositionByLanguage>()!;
+        UnityEngine.Object.Destroy(oldMove);
+
+        // Preview: Top-Aligned against the parent but below the name text, full width.
+        var previewTransform = preview.GetComponent<RectTransform>()!;
+        previewTransform.pivot = new Vector2(0.5f, 1f);
+        previewTransform.anchorMin = new Vector2(0.5f, 1f);
+        previewTransform.anchorMax = new Vector2(0.5f, 1f);
+        previewTransform.anchoredPosition = new Vector2(0f, -SLOT_TEXT_HEIGHT); // Below the text
+        previewTransform.sizeDelta = new Vector2(slotWidth, SLOT_PREVIEW_HEIGHT);
+
+        CloneSaveSlotElements(preview, slotIndex, stats, template);
     }
 
     public static string Init(int slotIndex, SaveStats? stats, string? message)
@@ -63,17 +100,66 @@ public partial class ArchiveMenuEntry : TextButton
             return $"{slotIndex}. <{Strings.Empty.Text}>";
         }
     }
-}
 
-public class ArchiveSaveSlotButton : Component
-{
-    public void Initialize(int slotIndex, SaveStats stats, SaveSlotButton template)
+    public void CloneSaveSlotElements(GameObject preview, int slotIndex, SaveStats stats, SaveSlotButton template)
     {
-        var spoolIcon = CloneChild(template, "ActiveSaveSlot/HUDLayout/Health Bar/Spool Icon");
-        var healthSlots = CloneChild(template, "ActiveSaveSlot/HUDLayout/Health Bar/HealthSlots");
-        var threadSpool = CloneChild(template, "ActiveSaveSlot/HUDLayout/Thread Spool");
-        var rosaries = CloneChild(template, "ActiveSaveSlot/HUDLayout/Rosaries");
-        var shellShards = CloneChild(template, "ActiveSaveSlot/HUDLayout/Shell Shards");
+        var (spoolIcon, spoolIconTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Health Bar/Spool Icon");
+        var (healthSlots, healthSlotsTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Health Bar/HealthSlots");
+        var (threadSpool, threadSpoolTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Thread Spool");
+        var (rosaries, rosariesTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Rosaries");
+        var (shellShards, shellShardsTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Shell Shards");
+
+        // health slots have a padding on the left to account for the spool icon, but we want to position them manually
+        var healthSlotsLayout = healthSlots.GetComponent<GridLayoutGroup>()!;
+        healthSlotsLayout.padding = new RectOffset(0, 0, 0, 0);
+
+        var healthHeight = stats.MaxHealth > 5 ? 100f : 50f;
+        healthSlotsTransform.sizeDelta = new Vector2(220f, healthHeight);
+
+        spoolIconTransform.anchoredPosition = new Vector2(-45f, 0f);
+        healthSlotsTransform.anchoredPosition = new Vector2(145f, 0f);
+        threadSpoolTransform.anchoredPosition = new Vector2(145f + 220f, 0f);
+
+        rosariesTransform.anchoredPosition = new Vector2(610f, 35f);
+        shellShardsTransform.anchoredPosition = new Vector2(610f, -35f);
+
+        // TODO: Percentage
+        // TODO: Playtime
+        // TODO: Location
+
+        var healthImages = healthSlotsTransform.GetComponentsInChildren<Image>(includeInactive: true);
+        m_healthSlots = new()
+        {
+            crests = template.healthSlots.crests,
+            spoolImage = spoolIcon.GetComponent<Image>()!,
+            healthTemplate = healthImages[0],
+        };
+        for (int i = 1; i < healthImages.Length; i++)
+        {
+            m_healthSlots.healthImages.Add(healthImages[i]);
+        }
+        m_healthSlots.ShowHealth(stats.MaxHealth, stats.PermadeathMode == GlobalEnums.PermadeathModes.On && !stats.BossRushMode, stats.CrestId);
+
+        m_silkBar = new()
+        {
+            sizer = template.silkBar.sizer,
+            widthPerSilk = template.silkBar.widthPerSilk,
+            baseWidth = template.silkBar.baseWidth,
+            silkChunkTemplate = template.silkBar.silkChunkTemplate,
+            silkChunkVariants = template.silkBar.silkChunkVariants,
+            silkChunkParent = threadSpoolTransform.Find("Rod Sizer")!,
+            notBroken = FindChildObject(threadSpool, "Rod Sizer/NotBroken")!,
+            brokenAlt = FindChildObject(threadSpool, "Rod Sizer/Broken")!,
+            cursedAlt = FindChildObject(threadSpool, "Rod Sizer/Broken Cursed")!,
+        };
+        // TODO: fix null reference exception here
+        // m_silkBar.ShowSilk(stats.IsSpoolBroken, stats.MaxSilk, stats.CrestId == "Cursed");
+
+        var rosaryText = rosariesTransform.Find("Text")?.GetComponent<Text>()!;
+        rosaryText.text = stats.Geo.ToString();
+
+        var shardText = shellShardsTransform.Find("Text")?.GetComponent<Text>()!;
+        shardText.text = stats.Shards.ToString();
     }
 
     public static void ShowSaveSlot(SaveSlotButton slot, SaveStats currentSaveStats)
@@ -138,27 +224,44 @@ public class ArchiveSaveSlotButton : Component
         slot.locationText.text = location.Replace("<br>", Environment.NewLine);
     }
 
-    public GameObject CloneChild(SaveSlotButton slot, string childPath)
+    public GameObject? FindChildObject(GameObject parent, string childPath)
+    {
+        var child = parent.transform.Find(childPath);
+        if (child == null)
+        {
+            SfmLogger.LogError($"Could not find child '{childPath}' in '{parent.name}'");
+            return null;
+        }
+        return child.gameObject;
+    }
+
+    public (GameObject obj, RectTransform transform) CloneChild(GameObject target, SaveSlotButton slot, string childPath)
     {
         var parent = slot.gameObject;
 
         var lastSlashIndex = childPath.LastIndexOf('/');
         var childName = lastSlashIndex >= 0 ? childPath.Substring(lastSlashIndex + 1) : childPath;
 
-        var child = parent.transform.Find(childPath);
+        var child = FindChildObject(parent, childPath);
         if (child == null)
         {
-            SfmLogger.LogError($"Could not find child '{childPath}' in '{parent.name}'");
-            return new GameObject($"MissingChild-{childName}");
+            var obj = new GameObject($"MissingChild-{childName}");
+            var t = obj.AddComponent<RectTransform>();
+            return (obj, t);
         }
 
-        var clone = UnityEngine.Object.Instantiate(child.gameObject, gameObject.transform);
+        var clone = UnityEngine.Object.Instantiate(child, target.transform);
         clone.name = childName;
         clone.SetActive(true);
 
         var rectTransform = clone.GetComponent<RectTransform>()!;
-        rectTransform.SetLocalPositionY(0f);
 
-        return clone;
+        // We want all positions to be based on the left side of the slot
+        rectTransform.anchorMin = new Vector2(0f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0f, 0.5f);
+        rectTransform.anchoredPosition = new Vector2(0f, 0f);
+        rectTransform.pivot = new Vector2(0f, 0.5f);
+
+        return (clone, rectTransform);
     }
 }
