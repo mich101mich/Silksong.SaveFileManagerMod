@@ -22,4 +22,4 @@ jobs:
               run: dotnet build tools/LocalizationChecker/LocalizationChecker.csproj -p:DefineConstants=TESTING
 
             - name: Run LocalizationChecker
-              run: tools\LocalizationChecker\bin\Debug\net8.0\LocalizationChecker.exe tools\LocalizationChecker\bin\Debug\net8.0\SaveFileManagerMod.dll languages
+              run: tools/LocalizationChecker/bin/Debug/net8.0/LocalizationChecker tools/LocalizationChecker/bin/Debug/net8.0/SaveFileManagerMod.dll languages
