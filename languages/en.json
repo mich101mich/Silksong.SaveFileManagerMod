@@ -7,5 +7,6 @@
     "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "No loadable saves found",
     "ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots": "Finished loading save slots",
     "ArchiveMenuEntry.Error": "Error",
+    "ArchiveMenuEntry.Unnamed": "Unnamed",
     "ArchiveMenuEntry.Empty": "Empty"
 }

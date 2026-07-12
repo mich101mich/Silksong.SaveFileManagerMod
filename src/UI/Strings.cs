@@ -47,6 +47,7 @@ public partial class ArchiveMenuEntry
     public class Strings : StringHelper
     {
         public static LT Error => Get("ArchiveMenuEntry.Error", "Error");
+        public static LT Unnamed => Get("ArchiveMenuEntry.Unnamed", "Unnamed");
         public static LT Empty => Get("ArchiveMenuEntry.Empty", "Empty");
     }
 }
