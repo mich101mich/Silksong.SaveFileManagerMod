@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System;
 using Silksong.ModMenu.Elements;
 using TeamCherry.Localization;
+using System.Linq;
 
 namespace SaveFileManagerMod.UI;
 
@@ -8,10 +10,20 @@ using LT = LocalizedText; // to shorten declarations
 
 public class StringHelper
 {
+#if TESTING
+    public struct KeyInfo { public string Key; public string Fallback; public List<string> Placeholders; }
+    public static KeyInfo? LocalizationKey = null;
+#endif
+
     public static string ModSheet => $"Mods.{SaveFileManagerPlugin.Id}";
 
     public static LocalizedText Get(string key, string fallback)
     {
+#if TESTING
+        LocalizationKey = new KeyInfo{Key = key, Fallback = fallback, Placeholders = new List<string>()};
+        return LocalizedText.Raw("");
+#endif
+
         return Language.Has(key, ModSheet)
             ? LocalizedText.Key(new LocalisedString(ModSheet, key))
             : LocalizedText.Raw(fallback);
@@ -19,6 +31,12 @@ public class StringHelper
 
     public static LocalizedText Get(string key, string fallback, object args)
     {
+#if TESTING
+        var placeholders = args.GetType().GetProperties().Select(p => p.Name).ToList();
+        LocalizationKey = new KeyInfo{Key = key, Fallback = fallback, Placeholders = placeholders};
+        return LocalizedText.Raw("");
+#endif
+
         string text = Language.Has(key, ModSheet) ? Language.Get(key, ModSheet) : fallback;
         foreach (var property in args.GetType().GetProperties())
         {
@@ -33,7 +51,7 @@ public partial class ArchiveSlotSelectionMenu
     public class Strings : StringHelper
     {
         public static LT TitleLoadIntoEmpty => Get("ArchiveSlotSelectionMenu.TitleLoadIntoEmpty", "Load from archive");
-        public static LT TitleArchiveReplace => Get("ArchiveSlotSelectionMenu.TitleArchiveReplace", "Archive/Replace");
+        public static LT TitleArchiveReplace => Get("ArchiveSlotSelectionMenu.TitleArchiveReplace", "Archive / Replace");
         public static LT NamedSlotInfo(string name, int index) => Get("ArchiveSlotSelectionMenu.NamedSlotInfo", "Target: Slot {index}. \"{name}\"", new { name, index });
         public static LT UnnamedSlotInfo(int index) => Get("ArchiveSlotSelectionMenu.UnnamedSlotInfo", "Target: Slot {index}.", new { index });
         public static LT LoadingText => Get("ArchiveSlotSelectionMenu.LoadingText", "Loading save slots...");

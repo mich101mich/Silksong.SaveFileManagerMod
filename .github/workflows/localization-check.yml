@@ -1,0 +1,25 @@
+name: Localization Check
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: 8.0.x
+
+            - name: Build LocalizationChecker
+              run: dotnet build tools/LocalizationChecker/LocalizationChecker.csproj -p:DefineConstants=TESTING
+
+            - name: Run LocalizationChecker
+              run: tools\LocalizationChecker\bin\Debug\net8.0\LocalizationChecker.exe tools\LocalizationChecker\bin\Debug\net8.0\SaveFileManagerMod.dll languages
