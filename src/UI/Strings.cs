@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System;
 using Silksong.ModMenu.Elements;
 using TeamCherry.Localization;
-using System.Linq;
 
 namespace SaveFileManagerMod.UI;
 
@@ -10,20 +8,10 @@ using LT = LocalizedText; // to shorten declarations
 
 public class StringHelper
 {
-#if TESTING
-    public struct KeyInfo { public string Key; public string Fallback; public List<string> Placeholders; }
-    public static KeyInfo? LocalizationKey = null;
-#endif
-
     public static string ModSheet => $"Mods.{SaveFileManagerPlugin.Id}";
 
     public static LocalizedText Get(string key, string fallback)
     {
-#if TESTING
-        LocalizationKey = new KeyInfo{Key = key, Fallback = fallback, Placeholders = new List<string>()};
-        return LocalizedText.Raw("");
-#endif
-
         return Language.Has(key, ModSheet)
             ? LocalizedText.Key(new LocalisedString(ModSheet, key))
             : LocalizedText.Raw(fallback);
@@ -31,12 +19,6 @@ public class StringHelper
 
     public static LocalizedText Get(string key, string fallback, object args)
     {
-#if TESTING
-        var placeholders = args.GetType().GetProperties().Select(p => p.Name).ToList();
-        LocalizationKey = new KeyInfo{Key = key, Fallback = fallback, Placeholders = placeholders};
-        return LocalizedText.Raw("");
-#endif
-
         string text = Language.Has(key, ModSheet) ? Language.Get(key, ModSheet) : fallback;
         foreach (var property in args.GetType().GetProperties())
         {

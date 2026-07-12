@@ -71,8 +71,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="tools\LocalizationChecker\**" />
-
     <Folder Remove="thunderstore/temp;thunderstore/dist" />
     <EmbeddedResource Include="assets\finished\Archive_01_idle.png" />
     <EmbeddedResource Include="assets\finished\Archive_02_transition.png" />
