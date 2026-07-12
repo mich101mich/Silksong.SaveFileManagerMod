@@ -19,19 +19,13 @@ public class SaveSlotActionRow : IDisposable
     public readonly ActionButtonWrapper m_clear;
     public readonly List<ActionButtonWrapper> m_buttons;
 
-    public static readonly FieldInfo s_emptySlotNav = typeof(SaveSlotButton).GetField("emptySlotNav", BindingFlags.NonPublic | BindingFlags.Instance)!;
-    public static readonly FieldInfo s_defeatedSlotNav = typeof(SaveSlotButton).GetField("defeatedSlotNav", BindingFlags.NonPublic | BindingFlags.Instance)!;
-
     public bool m_disposed;
 
     public SaveSlotActionRow(SaveSlotButton slot, Action onRename, Action onArchive)
     {
         m_slot = slot;
 
-        var restoreButton = typeof(SaveSlotButton)
-            .GetField("restoreSaveButton", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .GetValue(m_slot) as RestoreSaveButton
-            ?? throw new Exception("Could not find restore save button component");
+        var restoreButton = m_slot.restoreSaveButton;
 
         m_originalRestoreNav = restoreButton.navigation;
 
@@ -146,10 +140,7 @@ public class SaveSlotActionRow : IDisposable
         var flashEffect = original.flashEffect;
 
         // From ClearSaveButton
-        var selectIcon = typeof(ClearSaveButton)
-            .GetField("selectIcon", BindingFlags.NonPublic | BindingFlags.Instance)!
-            .GetValue(original) as Animator
-            ?? throw new Exception($"Could not find select icon on {original.name}");
+        var selectIcon = original.selectIcon;
 
         UnityEngine.Object.DestroyImmediate(original);
 
@@ -209,12 +200,8 @@ public class SaveSlotActionRow : IDisposable
         // Empty slot normally has no buttons, meaning it navigates to the back button.
         // Defeated slots normally only have a clear button. 
         // We added an archive button, so we need to navigate there instead.
-        foreach (var navField in new[] { s_emptySlotNav, s_defeatedSlotNav })
-        {
-            var nav = (Navigation)navField.GetValue(m_slot)!;
-            nav.selectOnDown = m_archive.button;
-            navField.SetValue(m_slot, nav);
-        }
+        m_slot.emptySlotNav = m_slot.emptySlotNav with { selectOnDown = m_archive.button };
+        m_slot.defeatedSlotNav = m_slot.defeatedSlotNav with { selectOnDown = m_archive.button };
     }
 
 }

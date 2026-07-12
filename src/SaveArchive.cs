@@ -50,7 +50,7 @@ public class SaveArchive
     /// <param name="targetSlotIndex">The index of the target save slot.</param>
     public static void MoveSlot(int sourceSlotIndex, int targetSlotIndex)
     {
-        var saveDirPath = GetSaveDirPath();
+        var saveDirPath = ((DesktopPlatform)Platform.Current).saveDirPath;
 
         // ========== Move save files (including backups) ==========
         // example names:
@@ -101,21 +101,5 @@ public class SaveArchive
     public static MethodInfo s_SaveSlotDir = typeof(Silksong.DataManager.DataPaths)
         .GetMethod("SaveSlotDir", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Failed to get SaveSlotDir method from DataPaths");
-
-    public static string s_saveDirPath = "";
-    public static bool s_initialized = false;
-    public static string GetSaveDirPath()
-    {
-        if (!s_initialized)
-        {
-            s_saveDirPath = typeof(DesktopPlatform)
-                .GetField("saveDirPath", BindingFlags.NonPublic | BindingFlags.Instance)?
-                .GetValue(Platform.Current) as string
-                ?? throw new InvalidOperationException("Failed to get saveDirPath from DesktopPlatform");
-            s_initialized = true;
-        }
-        return s_saveDirPath;
-    }
-
 
 }

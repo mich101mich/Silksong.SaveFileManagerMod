@@ -78,17 +78,13 @@ public class ArchiveSaveSlotButton : Component
 
     public static void ShowSaveSlot(SaveSlotButton slot, SaveStats currentSaveStats)
     {
-        var saveSlotCompletionIcons = typeof(SaveSlotButton)
-            .GetField("saveSlotCompletionIcons", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-            .GetValue(slot) as SaveSlotCompletionIcons;
-
         if (currentSaveStats.IsBlackThreadInfected)
         {
             slot.healthSlots.gameObject.SetActive(false);
 
             slot.silkBar.gameObject.SetActive(false);
 
-            saveSlotCompletionIcons?.gameObject.SetActive(false);
+            slot.saveSlotCompletionIcons?.gameObject.SetActive(false);
         }
         else
         {
@@ -99,8 +95,8 @@ public class ArchiveSaveSlotButton : Component
 
             slot.silkBar.ShowSilk(currentSaveStats.IsSpoolBroken, currentSaveStats.MaxSilk, currentSaveStats.CrestId == "Cursed");
 
-            saveSlotCompletionIcons?.gameObject.SetActive(true);
-            saveSlotCompletionIcons?.SetCompletionIconState(currentSaveStats);
+            slot.saveSlotCompletionIcons?.gameObject.SetActive(true);
+            slot.saveSlotCompletionIcons?.SetCompletionIconState(currentSaveStats);
         }
 
         bool showRosariesAndShards = !currentSaveStats.IsBlackThreadInfected && !currentSaveStats.BossRushMode;

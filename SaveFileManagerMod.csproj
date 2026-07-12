@@ -36,8 +36,8 @@
     <BepInExPluginsFolder>$(SilksongFolder)/BepInEx/plugins</BepInExPluginsFolder>
   </PropertyGroup>
 
-  <!-- For CI builds: Use nuget packages -->
-  <ItemGroup Condition=" '$(CI)' == 'true' ">
+  <!-- For CI and local builds: Use nuget packages -->
+  <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' ">
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="HarmonyX" Version="2.9.0" />
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
@@ -46,57 +46,8 @@
     <PackageReference Include="Silksong.DataManager" Version="*-*" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- For non-CI builds: Use DLLs from your local Silksong installation -->
-  <ItemGroup Condition=" '$(DesignTimeBuild)' != 'true' And '$(CI)' != 'true' ">
-    <Reference Include="0Harmony">
-      <HintPath>$(BepInExDllFolder)/0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>$(BepInExDllFolder)/BepInEx.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(SilksongDllFolder)/Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="TeamCherry.SharedUtils">
-      <HintPath>$(SilksongDllFolder)/TeamCherry.SharedUtils.dll</HintPath>
-    </Reference>
-    <Reference Include="TeamCherry.Localization">
-      <HintPath>$(SilksongDllFolder)/TeamCherry.Localization.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.InputLegacyModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.AnimationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(SilksongDllFolder)/UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Silksong.ModMenu">
-      <HintPath>$(BepInExPluginsFolder)/ModMenu-0.7.5/Silksong.ModMenu.dll</HintPath>
-    </Reference>
-    <Reference Include="Silksong.DataManager">
-      <HintPath>$(BepInExPluginsFolder)/DataManager-1.2.2/Silksong.DataManager.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
   <!-- For your IDE: Use the decompiled source code as project references to enable features like "Go to definition" -->
-  <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' And '$(CI)' != 'true' ">
+  <ItemGroup Condition=" '$(DesignTimeBuild)' == 'true' ">
     <ProjectReference Include="$(BepInExSourceFolder)\0Harmony\0Harmony.csproj" />
     <ProjectReference Include="$(BepInExSourceFolder)\BepInEx\BepInEx.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\TeamCherry.SharedUtils\TeamCherry.SharedUtils.csproj" />

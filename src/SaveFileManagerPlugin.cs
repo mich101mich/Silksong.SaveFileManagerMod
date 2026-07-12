@@ -82,12 +82,9 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         {
             if (Platform.Current is DesktopPlatform platform)
             {
-                var onlineSubsystem = typeof(DesktopPlatform)
-                    .GetField("onlineSubsystem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                    .GetValue(platform) as DesktopOnlineSubsystem;
-                if (onlineSubsystem != null && onlineSubsystem.HandlesGameSaves)
+                if (platform.onlineSubsystem != null && platform.onlineSubsystem.HandlesGameSaves)
                 {
-                    SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {onlineSubsystem}.");
+                    SfmLogger.LogError($"SaveFileManagerMod: This mod is not compatible with the online subsystem {platform.onlineSubsystem}.");
                     m_isModCompatible = false;
                 }
                 m_isModCompatible = true;

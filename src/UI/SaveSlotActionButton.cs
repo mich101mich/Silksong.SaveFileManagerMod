@@ -98,7 +98,7 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		}
 	}
 
-	protected override void OnDeselected(BaseEventData eventData)
+	public override void OnDeselected(BaseEventData eventData)
 	{
 		selectIcon?.SetBool(_isSelectedProp, value: false);
 		StartCoroutine(DeselectAnimation());
