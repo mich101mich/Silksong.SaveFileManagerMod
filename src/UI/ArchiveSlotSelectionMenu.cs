@@ -17,11 +17,9 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
     public int m_selectedSlotIndex = -1;
     public bool m_selectedSlotIsEmpty = false;
 
-    public bool m_isOpen = false;
-    public bool m_isTransitioning = false;
-    public bool m_shouldClose = false;
+    public bool IsOpen = false;
 
-    public bool IsOpen => m_isOpen || m_isTransitioning;
+    public Coroutine? m_openRoutine = null;
 
     public List<ArchiveMenuEntry?> m_rawEntries = new List<ArchiveMenuEntry?>();
     public int m_numFilledEntries = 0;
@@ -36,8 +34,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             m_screen = null;
         }
 
-        m_isOpen = false;
-        m_isTransitioning = false;
+        IsOpen = false;
     }
 
     public void OpenForSlot(SaveSlotButton slot)
@@ -51,20 +48,17 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
         m_templateSlotButton = slot;
 
-        StartCoroutine(OpenRoutine());
+        m_openRoutine = StartCoroutine(OpenRoutine());
     }
 
     public void Close()
     {
-        if (m_isTransitioning)
+        if (m_openRoutine != null)
         {
-            // Abort the current routine
-            m_shouldClose = true;
+            StopCoroutine(m_openRoutine);
+            m_openRoutine = null;
         }
-        else if (m_isOpen)
-        {
-            StartCoroutine(CloseRoutine());
-        }
+        StartCoroutine(CloseRoutine());
     }
 
     public void Update()
@@ -85,8 +79,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
     public IEnumerator OpenRoutine()
     {
-        m_isTransitioning = true;
-        m_shouldClose = false;
+        IsOpen = true;
 
         // Prevent input (mostly cancelling) until the menu is open.
         // Input will be resumed by ui.ShowMenu();
@@ -118,7 +111,10 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         for (int i = 1; i <= 4; i++)
         {
             AddEntry(i);
-            yield return new WaitUntil(() => m_rawEntries.Count > i);
+        }
+        yield return new WaitUntil(() => m_rawEntries.Count == 5);
+        for (int i = 1; i <= 4; i++)
+        {
             if (m_rawEntries[i] is ArchiveMenuEntry entry)
             {
                 m_screen.Add(entry);
@@ -129,12 +125,12 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         if (ui.menuState == GlobalEnums.MainMenuState.SAVE_PROFILES)
         {
             // ui.uiAudioPlayer.PlayOpenProfileSelect();
-            yield return ui.StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
+            yield return StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
         }
 
         InvokeScreenOnShow(m_screen);
 
-        yield return ui.StartCoroutine(ui.ShowMenu(m_screen.MenuScreen));
+        yield return StartCoroutine(ui.ShowMenu(m_screen.MenuScreen));
 
         for (int i = 5; i <= 50; i++)
         {
@@ -145,22 +141,12 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
                 m_screen.Add(entry);
             }
 
-            yield return null; // slight delay to avoid freezing the game
-            yield return null;
-
-            if (m_shouldClose)
-            {
-                yield return StartCoroutine(CloseRoutine());
-                yield break;
-            }
+            yield return new WaitForSeconds(0.01f); // slight delay to avoid freezing the game
         }
 
         statusLabel.Text.LocalizedText = m_numFilledEntries == 0
             ? Strings.NoLoadableSavesFound // "No loadable saves found"
             : Strings.FinishedLoadingSaveSlots; // "Finished loading save slots"
-
-        m_isOpen = true;
-        m_isTransitioning = false;
     }
 
     public void AddEntry(int slotIndex)
@@ -205,19 +191,14 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             UIManager.instance.ReloadSaves();
         };
 
-        if (!m_shouldClose)
-        {
-            // Don't add the entry immediately, because that causes visual glitches.
-            // Only modify UI from the routine.
-            m_rawEntries.Add(entry);
-            m_numFilledEntries++;
-        }
+        // Don't add the entry immediately, because that causes visual glitches.
+        // Only modify UI from the routine.
+        m_rawEntries.Add(entry);
+        m_numFilledEntries++;
     }
 
     public IEnumerator CloseRoutine()
     {
-        m_isTransitioning = true;
-
         // Prevent input (mostly double cancel) until the menu is closed.
         // Input will be resumed by ui.GoToProfileMenu();
         GameManager.instance.inputHandler.StopUIInput();
@@ -226,18 +207,16 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         if (m_screen != null)
         {
-            yield return ui.StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
+            yield return StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
 
             InvokeScreenOnHide(m_screen);
 
             m_screen.Dispose();
             m_screen = null;
         }
-        m_isOpen = false;
+        IsOpen = false;
 
-        yield return ui.StartCoroutine(ui.GoToProfileMenu());
-
-        m_isTransitioning = false;
+        yield return StartCoroutine(ui.GoToProfileMenu());
     }
 
     public static readonly MethodInfo s_invokeOnShow = typeof(AbstractMenuScreen)
