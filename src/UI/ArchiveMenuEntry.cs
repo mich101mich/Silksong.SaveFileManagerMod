@@ -102,12 +102,14 @@ public partial class ArchiveMenuEntry : TextButton
     {
         var (spoolIcon, spoolIconTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Health Bar/Spool Icon");
         var (healthSlots, healthSlotsTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Health Bar/HealthSlots");
+        var (defeated, defeatedTransform) = CloneChild(preview, template, "DefeatedText");
         var (threadSpool, threadSpoolTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Thread Spool");
         var (rosaries, rosariesTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Rosaries");
         var (shellShards, shellShardsTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Shell Shards");
-        var (playTimeObj, playTimeTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/PlayTimeText");
-        var (completionObj, completionTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/CompletionText");
+        var (playTime, playTimeTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/PlayTimeText");
+        var (completion, completionTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/CompletionText");
         var (locationObj, locationTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/LocationText");
+
 
         // health slots have a padding on the left to account for the spool icon, but we want to position them manually
         var healthSlotsLayout = healthSlots.GetComponent<GridLayoutGroup>()!;
@@ -116,9 +118,12 @@ public partial class ArchiveMenuEntry : TextButton
         var healthHeight = stats.MaxHealth > 5 ? 100f : 50f;
         healthSlotsTransform.sizeDelta = new Vector2(220f, healthHeight);
 
+        defeatedTransform.sizeDelta = new Vector2(480f, 70f); // defeated text for some reason starts with a negative width
+
         spoolIconTransform.anchoredPosition = new Vector2(-45f, 0f);
 
         healthSlotsTransform.anchoredPosition = new Vector2(155f, 0f);
+        defeatedTransform.anchoredPosition = new Vector2(155f, 0f); // will be displayed instead of health slots if the save is defeated
 
         threadSpoolTransform.anchoredPosition = new Vector2(380f, 0f);
 
@@ -141,7 +146,6 @@ public partial class ArchiveMenuEntry : TextButton
         {
             m_healthSlots.healthImages.Add(healthImages[i]);
         }
-        m_healthSlots.ShowHealth(stats.MaxHealth, stats.PermadeathMode == GlobalEnums.PermadeathModes.On && !stats.BossRushMode, stats.CrestId);
 
         // Thread spool template starts as a child of "Rod Sizer/Inside", but is moved to "Rod Sizer" if ShowSilk was called.
         // So, filled slots have the template in the parent, while empty slots have the template still in the child.
@@ -159,7 +163,23 @@ public partial class ArchiveMenuEntry : TextButton
             brokenAlt = GetChild(threadSpool, "Rod Sizer/Broken")!,
             cursedAlt = GetChild(threadSpool, "Rod Sizer/Broken Cursed")!,
         };
-        m_silkBar.ShowSilk(stats.IsSpoolBroken, stats.MaxSilk, stats.CrestId == "Cursed");
+
+        if (stats.PermadeathMode == GlobalEnums.PermadeathModes.Dead)
+        {
+            m_healthSlots.ShowHealth(0, true, stats.CrestId);
+            threadSpool.SetActive(false);
+
+            defeated.SetActive(true);
+            defeated.GetComponent<Text>()!.alignment = TextAnchor.UpperLeft;
+            defeated.GetComponent<CanvasGroup>()!.alpha = 1f;
+        }
+        else
+        {
+            bool isStealsoul = stats.PermadeathMode == GlobalEnums.PermadeathModes.On;
+            m_healthSlots.ShowHealth(stats.MaxHealth, isStealsoul, stats.CrestId);
+            m_silkBar.ShowSilk(stats.IsSpoolBroken, stats.MaxSilk, stats.CrestId == "Cursed");
+            defeated.SetActive(false);
+        }
 
         var rosaryText = rosariesTransform.Find("Text")?.GetComponent<Text>()!;
         rosaryText.text = stats.Geo.ToString();
@@ -169,101 +189,39 @@ public partial class ArchiveMenuEntry : TextButton
         shardText.text = stats.Shards.ToString();
         shardText.fontSize = 40;
 
-        var playTimeText = playTimeObj.GetComponent<Text>()!;
+        var playTimeText = playTime.GetComponent<Text>()!;
         playTimeText.text = stats.GetPlaytimeHHMM();
         playTimeText.alignment = TextAnchor.MiddleLeft;
 
         if (stats.UnlockedCompletionRate)
         {
-            var completionText = completionObj.GetComponent<Text>()!;
+            var completionText = completion.GetComponent<Text>()!;
             completionText.text = stats.CompletionPercentage.ToString(CultureInfo.InvariantCulture) + "%";
             completionText.alignment = TextAnchor.MiddleRight;
             completionText.fontSize = 40;
         }
         else
         {
-            completionObj.SetActive(false);
+            completion.SetActive(false);
         }
 
-        string location;
+        string locationStr;
         if (stats.IsBlackThreadInfected)
         {
-            location = "???";
+            locationStr = "???";
         }
         else if (template.saveSlots.GetBackground(stats)?.NameOverride is LocalisedString nameOverride && !nameOverride.IsEmpty)
         {
-            location = nameOverride;
+            locationStr = nameOverride;
         }
         else
         {
-            location = GameManager.GetFormattedMapZoneStringV2(stats.MapZone);
+            locationStr = GameManager.GetFormattedMapZoneStringV2(stats.MapZone);
         }
         var locationText = locationObj.GetComponent<Text>()!;
-        locationText.text = location;
+        locationText.text = locationStr;
         locationText.alignment = TextAnchor.MiddleLeft;
         locationText.fontSize = 40;
-    }
-
-    public static void ShowSaveSlot(SaveSlotButton slot, SaveStats currentSaveStats)
-    {
-        if (currentSaveStats.IsBlackThreadInfected)
-        {
-            slot.healthSlots.gameObject.SetActive(false);
-
-            slot.silkBar.gameObject.SetActive(false);
-
-            slot.saveSlotCompletionIcons?.gameObject.SetActive(false);
-        }
-        else
-        {
-            bool isSteelsoul = currentSaveStats.PermadeathMode == GlobalEnums.PermadeathModes.On && !currentSaveStats.BossRushMode;
-
-            slot.healthSlots.gameObject.SetActive(true);
-            slot.healthSlots.ShowHealth(currentSaveStats.MaxHealth, isSteelsoul, currentSaveStats.CrestId);
-
-            slot.silkBar.ShowSilk(currentSaveStats.IsSpoolBroken, currentSaveStats.MaxSilk, currentSaveStats.CrestId == "Cursed");
-
-            slot.saveSlotCompletionIcons?.gameObject.SetActive(true);
-            slot.saveSlotCompletionIcons?.SetCompletionIconState(currentSaveStats);
-        }
-
-        bool showRosariesAndShards = !currentSaveStats.IsBlackThreadInfected && !currentSaveStats.BossRushMode;
-        slot.rosaryGroup.SetActive(showRosariesAndShards);
-        slot.shardGroup.SetActive(showRosariesAndShards);
-        if (showRosariesAndShards)
-        {
-            slot.rosaryText.text = currentSaveStats.Geo.ToString();
-            slot.shardText.text = currentSaveStats.Shards.ToString();
-        }
-
-        if (currentSaveStats.UnlockedCompletionRate && !currentSaveStats.IsBlackThreadInfected && !currentSaveStats.BossRushMode)
-        {
-            slot.completionText.gameObject.SetActive(true);
-            slot.completionText.text = currentSaveStats.CompletionPercentage.ToString(CultureInfo.InvariantCulture) + "%";
-        }
-        else
-        {
-            slot.completionText.gameObject.SetActive(false);
-        }
-
-        slot.playTimeText.gameObject.SetActive(true);
-        slot.playTimeText.text = currentSaveStats.GetPlaytimeHHMM();
-
-        string location;
-        if (currentSaveStats.IsBlackThreadInfected)
-        {
-            location = "???";
-        }
-        else if (slot.saveSlots.GetBackground(currentSaveStats)?.NameOverride is LocalisedString nameOverride && !nameOverride.IsEmpty)
-        {
-            location = nameOverride;
-        }
-        else
-        {
-            location = GameManager.GetFormattedMapZoneStringV2(currentSaveStats.MapZone);
-        }
-        slot.locationText.gameObject.SetActive(true);
-        slot.locationText.text = location.Replace("<br>", Environment.NewLine);
     }
 
     public GameObject? GetChild(GameObject parent, string childPath)
