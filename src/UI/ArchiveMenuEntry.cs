@@ -16,6 +16,8 @@ public partial class ArchiveMenuEntry : TextButton
     public static readonly float SLOT_PREVIEW_HEIGHT = 140f;
     public static readonly float SLOT_TOTAL_HEIGHT = SLOT_TEXT_HEIGHT + SLOT_PREVIEW_HEIGHT;
 
+    public static readonly float SLOT_WIDTH = 1510f - 164f * 2f;
+
     public SaveProfileHealthBar? m_healthSlots;
     public SaveProfileSilkBar? m_silkBar;
 
@@ -24,23 +26,18 @@ public partial class ArchiveMenuEntry : TextButton
     {
         base.Container.name = $"SFM-ArchiveSaveSlotButton";
 
-        // Width calculation: Scroll area size is 1510 and we need to fit the slot + selection arrow on both sides.
-        const float totalWidth = 1510f;
-        const float arrowWidth = 164f;
-        const float slotWidth = totalWidth - (arrowWidth * 2f);
-
         // Layout:
         // +-------------------------------------------------------------------------------+ ---
         // | <<< <N>. <Slot Name>                                                      >>> |  | SLOT_TEXT_HEIGHT
-        // |     [     ]                         R 1234                                    | ---
-        // |     [Crest] M M M M M  +||||---+             91%    12H 15M   The Abyss       |  | SLOT_PREVIEW_HEIGHT
-        // |     [     ]                         S 800                                     |  |
+        // |     [     ]                         R 1234    12H 15M       91%               | ---
+        // |     [Crest] M M M M M  +||||---+                                              |  | SLOT_PREVIEW_HEIGHT
+        // |     [     ]                         S 800     The Abyss                       |  |
         // +-------------------------------------------------------------------------------+ ---
 
-        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, SLOT_TOTAL_HEIGHT);
+        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
-        var textButton = FindChildObject(base.Container, "TextButton")!;
-        textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(slotWidth, SLOT_TOTAL_HEIGHT);
+        var textButton = GetChild(base.Container, "TextButton")!;
+        textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
         var nameText = base.ButtonText.gameObject;
 
@@ -53,7 +50,7 @@ public partial class ArchiveMenuEntry : TextButton
         nameTransform.anchorMin = new Vector2(0.5f, 1f);
         nameTransform.anchorMax = new Vector2(0.5f, 1f);
         nameTransform.anchoredPosition = new Vector2(0f, 0f);
-        nameTransform.sizeDelta = new Vector2(slotWidth, SLOT_TEXT_HEIGHT);
+        nameTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TEXT_HEIGHT);
 
         base.ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
 
@@ -73,7 +70,7 @@ public partial class ArchiveMenuEntry : TextButton
         previewTransform.anchorMin = new Vector2(0.5f, 1f);
         previewTransform.anchorMax = new Vector2(0.5f, 1f);
         previewTransform.anchoredPosition = new Vector2(0f, -SLOT_TEXT_HEIGHT); // Below the text
-        previewTransform.sizeDelta = new Vector2(slotWidth, SLOT_PREVIEW_HEIGHT);
+        previewTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_PREVIEW_HEIGHT);
 
         CloneSaveSlotElements(preview, slotIndex, stats, template);
     }
@@ -108,6 +105,9 @@ public partial class ArchiveMenuEntry : TextButton
         var (threadSpool, threadSpoolTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Thread Spool");
         var (rosaries, rosariesTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Rosaries");
         var (shellShards, shellShardsTransform) = CloneChild(preview, template, "ActiveSaveSlot/HUDLayout/Shell Shards");
+        var (playTimeObj, playTimeTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/PlayTimeText");
+        var (completionObj, completionTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/CompletionText");
+        var (locationObj, locationTransform) = CloneChild(preview, template, "ActiveSaveSlot/Bottom Section/LocationText");
 
         // health slots have a padding on the left to account for the spool icon, but we want to position them manually
         var healthSlotsLayout = healthSlots.GetComponent<GridLayoutGroup>()!;
@@ -117,15 +117,18 @@ public partial class ArchiveMenuEntry : TextButton
         healthSlotsTransform.sizeDelta = new Vector2(220f, healthHeight);
 
         spoolIconTransform.anchoredPosition = new Vector2(-45f, 0f);
-        healthSlotsTransform.anchoredPosition = new Vector2(145f, 0f);
-        threadSpoolTransform.anchoredPosition = new Vector2(145f + 220f, 0f);
 
-        rosariesTransform.anchoredPosition = new Vector2(610f, 35f);
-        shellShardsTransform.anchoredPosition = new Vector2(610f, -35f);
+        healthSlotsTransform.anchoredPosition = new Vector2(155f, 0f);
 
-        // TODO: Percentage
-        // TODO: Playtime
-        // TODO: Location
+        threadSpoolTransform.anchoredPosition = new Vector2(380f, 0f);
+
+        rosariesTransform.anchoredPosition = new Vector2(640f, 35f);
+        shellShardsTransform.anchoredPosition = new Vector2(640f, -35f);
+
+        playTimeTransform.anchoredPosition = new Vector2(870f, 35f);
+        locationTransform.anchoredPosition = new Vector2(870f, -35f);
+
+        completionTransform.anchoredPosition = new Vector2(1000f, 35f);
 
         var healthImages = healthSlotsTransform.GetComponentsInChildren<Image>(includeInactive: true);
         m_healthSlots = new()
@@ -140,26 +143,65 @@ public partial class ArchiveMenuEntry : TextButton
         }
         m_healthSlots.ShowHealth(stats.MaxHealth, stats.PermadeathMode == GlobalEnums.PermadeathModes.On && !stats.BossRushMode, stats.CrestId);
 
+        // Thread spool template starts as a child of "Rod Sizer/Inside", but is moved to "Rod Sizer" if ShowSilk was called.
+        // So, filled slots have the template in the parent, while empty slots have the template still in the child.
+        var silkChunkTemplateTransform = threadSpoolTransform.Find("Rod Sizer/Inside/Silk Chunk") ?? threadSpoolTransform.Find("Rod Sizer/Silk Chunk");
+
         m_silkBar = new()
         {
-            sizer = template.silkBar.sizer,
+            sizer = GetChildComponent<LayoutElement>(threadSpool, "Rod Sizer")!,
             widthPerSilk = template.silkBar.widthPerSilk,
             baseWidth = template.silkBar.baseWidth,
-            silkChunkTemplate = template.silkBar.silkChunkTemplate,
+            silkChunkTemplate = silkChunkTemplateTransform!.gameObject.GetComponent<Image>()!,
             silkChunkVariants = template.silkBar.silkChunkVariants,
-            silkChunkParent = threadSpoolTransform.Find("Rod Sizer")!,
-            notBroken = FindChildObject(threadSpool, "Rod Sizer/NotBroken")!,
-            brokenAlt = FindChildObject(threadSpool, "Rod Sizer/Broken")!,
-            cursedAlt = FindChildObject(threadSpool, "Rod Sizer/Broken Cursed")!,
+            silkChunkParent = threadSpoolTransform.Find("Rod Sizer/Inside")!,
+            notBroken = GetChild(threadSpool, "Rod Sizer/NotBroken")!,
+            brokenAlt = GetChild(threadSpool, "Rod Sizer/Broken")!,
+            cursedAlt = GetChild(threadSpool, "Rod Sizer/Broken Cursed")!,
         };
-        // TODO: fix null reference exception here
-        // m_silkBar.ShowSilk(stats.IsSpoolBroken, stats.MaxSilk, stats.CrestId == "Cursed");
+        m_silkBar.ShowSilk(stats.IsSpoolBroken, stats.MaxSilk, stats.CrestId == "Cursed");
 
         var rosaryText = rosariesTransform.Find("Text")?.GetComponent<Text>()!;
         rosaryText.text = stats.Geo.ToString();
+        rosaryText.fontSize = 40;
 
         var shardText = shellShardsTransform.Find("Text")?.GetComponent<Text>()!;
         shardText.text = stats.Shards.ToString();
+        shardText.fontSize = 40;
+
+        var playTimeText = playTimeObj.GetComponent<Text>()!;
+        playTimeText.text = stats.GetPlaytimeHHMM();
+        playTimeText.alignment = TextAnchor.MiddleLeft;
+
+        if (stats.UnlockedCompletionRate)
+        {
+            var completionText = completionObj.GetComponent<Text>()!;
+            completionText.text = stats.CompletionPercentage.ToString(CultureInfo.InvariantCulture) + "%";
+            completionText.alignment = TextAnchor.MiddleRight;
+            completionText.fontSize = 40;
+        }
+        else
+        {
+            completionObj.SetActive(false);
+        }
+
+        string location;
+        if (stats.IsBlackThreadInfected)
+        {
+            location = "???";
+        }
+        else if (template.saveSlots.GetBackground(stats)?.NameOverride is LocalisedString nameOverride && !nameOverride.IsEmpty)
+        {
+            location = nameOverride;
+        }
+        else
+        {
+            location = GameManager.GetFormattedMapZoneStringV2(stats.MapZone);
+        }
+        var locationText = locationObj.GetComponent<Text>()!;
+        locationText.text = location;
+        locationText.alignment = TextAnchor.MiddleLeft;
+        locationText.fontSize = 40;
     }
 
     public static void ShowSaveSlot(SaveSlotButton slot, SaveStats currentSaveStats)
@@ -224,7 +266,7 @@ public partial class ArchiveMenuEntry : TextButton
         slot.locationText.text = location.Replace("<br>", Environment.NewLine);
     }
 
-    public GameObject? FindChildObject(GameObject parent, string childPath)
+    public GameObject? GetChild(GameObject parent, string childPath)
     {
         var child = parent.transform.Find(childPath);
         if (child == null)
@@ -235,6 +277,22 @@ public partial class ArchiveMenuEntry : TextButton
         return child.gameObject;
     }
 
+    public T? GetChildComponent<T>(GameObject parent, string childPath) where T : class
+    {
+        var child = GetChild(parent, childPath);
+        if (child == null)
+        {
+            return null;
+        }
+        var component = child.GetComponent<T>();
+        if (component == null)
+        {
+            SfmLogger.LogError($"Could not find component '{typeof(T).Name}' in '{parent.name}/{childPath}'");
+            return null;
+        }
+        return component;
+    }
+
     public (GameObject obj, RectTransform transform) CloneChild(GameObject target, SaveSlotButton slot, string childPath)
     {
         var parent = slot.gameObject;
@@ -242,7 +300,7 @@ public partial class ArchiveMenuEntry : TextButton
         var lastSlashIndex = childPath.LastIndexOf('/');
         var childName = lastSlashIndex >= 0 ? childPath.Substring(lastSlashIndex + 1) : childPath;
 
-        var child = FindChildObject(parent, childPath);
+        var child = GetChild(parent, childPath);
         if (child == null)
         {
             var obj = new GameObject($"MissingChild-{childName}");
