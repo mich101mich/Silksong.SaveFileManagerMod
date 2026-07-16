@@ -128,15 +128,15 @@ public partial class ArchiveMenuEntry : TextButton
         healthSlotsTransform.anchoredPosition = new Vector2(155f, 0f);
         defeatedTransform.anchoredPosition = new Vector2(155f, 0f); // will be displayed instead of health slots if the save is defeated
 
-        threadSpoolTransform.anchoredPosition = new Vector2(380f, 0f);
+        threadSpoolTransform.anchoredPosition = new Vector2(370f, 0f);
 
-        rosariesTransform.anchoredPosition = new Vector2(640f, 35f);
-        shellShardsTransform.anchoredPosition = new Vector2(640f, -35f);
+        rosariesTransform.anchoredPosition = new Vector2(630f, 35f);
+        shellShardsTransform.anchoredPosition = new Vector2(630f, -35f);
 
         playTimeTransform.anchoredPosition = new Vector2(870f, 35f);
         locationTransform.anchoredPosition = new Vector2(870f, -35f);
 
-        completionTransform.anchoredPosition = new Vector2(1000f, 35f);
+        completionTransform.anchoredPosition = new Vector2(890f, 35f);
 
         var healthImages = healthSlotsTransform.GetComponentsInChildren<Image>(includeInactive: true);
         m_healthSlots = new()
