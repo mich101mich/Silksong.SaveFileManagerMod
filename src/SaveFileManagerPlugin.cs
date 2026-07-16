@@ -106,7 +106,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(UIManager), nameof(UIManager.UIGoToProfileMenu))]
     public static void UIManager_UIGoToProfileMenu_Prefix(UIManager __instance)
     {
-        s_instance.initUi();
+        s_instance.InitUi();
     }
 
     [HarmonyPrefix]
@@ -117,7 +117,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         s_instance.m_saveOptions.Clear();
     }
 
-    public void initUi()
+    public void InitUi()
     {
         if (m_saveOptions.Count > 0)
         {
@@ -132,13 +132,7 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         SfmLogger.LogInfo("Initializing SaveOptions for all save slots...");
 
         var ui = UIManager.instance;
-        var saveSlotButtons = new List<SaveSlotButton>()
-        {
-            ui.slotOne,
-            ui.slotTwo,
-            ui.slotThree,
-            ui.slotFour,
-        };
+        var saveSlotButtons = new[] { ui.slotOne, ui.slotTwo, ui.slotThree, ui.slotFour };
         foreach (var button in saveSlotButtons)
         {
             var options = button.gameObject.AddComponent<SaveOptions>();

@@ -171,24 +171,25 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             return;
         }
 
-        var entry = new ArchiveMenuEntry(slotIndex, stats, message, m_templateSlotButton);
-
-        entry.OnSubmit = () =>
+        var entry = new ArchiveMenuEntry(slotIndex, stats, message, m_templateSlotButton)
         {
-            if (m_selectedSlotIsEmpty)
+            OnSubmit = () =>
             {
-                SaveArchive.LoadSlot(m_selectedSlotIndex, slotIndex);
+                if (m_selectedSlotIsEmpty)
+                {
+                    SaveArchive.LoadSlot(m_selectedSlotIndex, slotIndex);
+                }
+                else if (isEmpty)
+                {
+                    SaveArchive.ArchiveSlot(m_selectedSlotIndex, slotIndex);
+                }
+                else
+                {
+                    SaveArchive.SwapSlots(m_selectedSlotIndex, slotIndex);
+                }
+                Close();
+                UIManager.instance.ReloadSaves();
             }
-            else if (isEmpty)
-            {
-                SaveArchive.ArchiveSlot(m_selectedSlotIndex, slotIndex);
-            }
-            else
-            {
-                SaveArchive.SwapSlots(m_selectedSlotIndex, slotIndex);
-            }
-            Close();
-            UIManager.instance.ReloadSaves();
         };
 
         // Don't add the entry immediately, because that causes visual glitches.

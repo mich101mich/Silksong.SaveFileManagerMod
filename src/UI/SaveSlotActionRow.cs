@@ -39,7 +39,7 @@ public class SaveSlotActionRow : IDisposable
         m_archive = new ActionButtonWrapper(CloneIconButton("Archive", onArchive), isOriginal: false);
         m_clear = new ActionButtonWrapper(clearButton, isOriginal: true);
 
-        m_buttons = new List<ActionButtonWrapper> { m_restore, m_rename, m_archive, m_clear };
+        m_buttons = [m_restore, m_rename, m_archive, m_clear];
     }
 
     public void Dispose()
