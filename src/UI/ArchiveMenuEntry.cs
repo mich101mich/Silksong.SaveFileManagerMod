@@ -79,7 +79,7 @@ public partial class ArchiveMenuEntry : TextButton
     {
         if (message != null)
         {
-            return $"{slotIndex}. <{Strings.Error.Text}>";
+            return $"{slotIndex}. <{Strings.Error}>";
         }
         else if (stats != null)
         {
@@ -89,12 +89,12 @@ public partial class ArchiveMenuEntry : TextButton
             }
             else
             {
-                return $"{slotIndex}. <{Strings.Unnamed.Text}>";
+                return $"{slotIndex}. <{Strings.Unnamed}>";
             }
         }
         else
         {
-            return $"{slotIndex}. <{Strings.Empty.Text}>";
+            return $"{slotIndex}. <{Strings.Empty}>";
         }
     }
 

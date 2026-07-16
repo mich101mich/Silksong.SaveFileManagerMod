@@ -110,7 +110,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         }
 
         statusLabel.Text.lineSpacing = 1f;
-        statusLabel.Text.text = slotInfo.Text + '\n' + Strings.LoadingText.Text; // "Loading save slots..."
+        statusLabel.Text.text = $"{slotInfo}\n{Strings.LoadingText}"; // "Loading save slots..."
         m_screen.Add(statusLabel);
 
         m_rawEntries.Clear();
@@ -155,11 +155,11 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         if (m_numFilledEntries == 0)
         {
-            statusLabel.Text.text = slotInfo.Text + '\n' + Strings.NoLoadableSavesFound.Text; // "No loadable saves found"
+            statusLabel.Text.text = $"{slotInfo}\n{Strings.NoLoadableSavesFound}"; // "No loadable saves found"
         }
         else
         {
-            statusLabel.Text.text = slotInfo.Text;
+            statusLabel.Text.text = $"{slotInfo}";
         }
     }
 

@@ -73,12 +73,12 @@ class LanguageEntry:
 # {
 #     public class Strings : StringHelper
 #     {
-#         public static LT <Name> => Get("<key>", "<fallback>");
-#         public static LT <Name>(<args...>) => Get("<key>", "<fallback>", new { <args...> });
+#         public static string <Name> => Get("<key>", "<fallback>");
+#         public static string <Name>(<args...>) => Get("<key>", "<fallback>", new { <args...> });
 #     }
 # }
 CLASS_DECLARATION_PREFIX = "public partial class "
-MEMBER_DECLARATION_PREFIX = "        public static LT "
+MEMBER_DECLARATION_PREFIX = "        public static string "
 
 def main():
     """
