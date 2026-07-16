@@ -38,7 +38,6 @@ public partial class ArchiveSlotSelectionMenu
         public static LT UnnamedSlotInfo(int index) => Get("ArchiveSlotSelectionMenu.UnnamedSlotInfo", "Target: Slot {index}.", new { index });
         public static LT LoadingText => Get("ArchiveSlotSelectionMenu.LoadingText", "Loading save slots...");
         public static LT NoLoadableSavesFound => Get("ArchiveSlotSelectionMenu.NoLoadableSavesFound", "No loadable saves found");
-        public static LT FinishedLoadingSaveSlots => Get("ArchiveSlotSelectionMenu.FinishedLoadingSaveSlots", "Finished loading save slots");
     }
 }
 

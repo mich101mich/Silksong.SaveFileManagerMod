@@ -99,10 +99,19 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         var slotInfo = SaveName.TryGetSlotName(m_selectedSlotIndex, out string slotName)
             ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
             : Strings.UnnamedSlotInfo(index: m_selectedSlotIndex); // $"Target: Slot {index}."
-        m_screen.Add(new TextLabel(slotInfo));
 
-        var statusLabel = new TextLabel(Strings.LoadingText); // "Loading save slots..."
-        m_screen.Add(statusLabel); // TODO: These also have full vertical spacing
+        var statusLabel = new TextLabel("Sfm-StatusLabel");
+
+        // By default, text has a component that changes the line spacing to -0.33f, which is bad for multiline strings.
+        var removedAlign = statusLabel.Text.GetComponent<FixVerticalAlign>();
+        if (removedAlign != null)
+        {
+            UnityEngine.Object.Destroy(removedAlign);
+        }
+
+        statusLabel.Text.lineSpacing = 1f;
+        statusLabel.Text.text = slotInfo.Text + '\n' + Strings.LoadingText.Text; // "Loading save slots..."
+        m_screen.Add(statusLabel);
 
         m_rawEntries.Clear();
         m_rawEntries.Add(null); // index 0 is unused
@@ -144,9 +153,14 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             yield return new WaitForSeconds(0.01f); // slight delay to avoid freezing the game
         }
 
-        statusLabel.Text.LocalizedText = m_numFilledEntries == 0
-            ? Strings.NoLoadableSavesFound // "No loadable saves found"
-            : Strings.FinishedLoadingSaveSlots; // "Finished loading save slots"
+        if (m_numFilledEntries == 0)
+        {
+            statusLabel.Text.text = slotInfo.Text + '\n' + Strings.NoLoadableSavesFound.Text; // "No loadable saves found"
+        }
+        else
+        {
+            statusLabel.Text.text = slotInfo.Text;
+        }
     }
 
     public void AddEntry(int slotIndex)
