@@ -145,6 +145,8 @@ public class RenameEditor : IDisposable
     {
         var input = new TextInput<string>("", TextModels.ForStrings(), "");
         input.Container.name = "SFM-RenameEditor";
+        input.InputField.gameObject.name = "SFM-RenameEditorTextInput";
+        input.InputField.textComponent.gameObject.name = "SFM-RenameEditorText";
 
         RectTransform slotRect = saveSlotButton.GetComponent<RectTransform>();
         RectTransform actionRowRect = saveSlotButton.clearSaveButton.GetComponent<RectTransform>();

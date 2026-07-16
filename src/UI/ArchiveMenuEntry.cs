@@ -24,7 +24,7 @@ public partial class ArchiveMenuEntry : TextButton
     public ArchiveMenuEntry(int slotIndex, SaveStats? stats, string? message, SaveSlotButton template)
         : base(Init(slotIndex, stats, message), message ?? "")
     {
-        base.Container.name = $"SFM-ArchiveSaveSlotButton";
+        base.Container.name = $"SFM-ArchiveSaveSlot";
 
         // Layout:
         // +-------------------------------------------------------------------------------+ ---
@@ -37,9 +37,11 @@ public partial class ArchiveMenuEntry : TextButton
         base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
         var textButton = GetChild(base.Container, "TextButton")!;
+        textButton.name = "SFM-ArchiveSaveSlot-Inner";
         textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
         var nameText = base.ButtonText.gameObject;
+        nameText.name = "SFM-SaveSlotName";
 
         var oldFitter = nameText.GetComponent<ContentSizeFitter>()!;
         UnityEngine.Object.Destroy(oldFitter);
@@ -54,12 +56,13 @@ public partial class ArchiveMenuEntry : TextButton
 
         base.ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
 
+        var preview = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
+        preview.name = "SFM-SaveSlotPreview";
+
         if (message != null || stats == null)
         {
             return;
         }
-
-        var preview = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
 
         var oldMove = preview.GetComponent<ChangePositionByLanguage>()!;
         UnityEngine.Object.Destroy(oldMove);

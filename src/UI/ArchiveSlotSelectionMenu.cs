@@ -92,6 +92,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             : Strings.TitleArchiveReplace; // "Archive / Replace"
 
         m_screen = new ScrollingMenuScreen(title);
+        m_screen.Container.name = "SFM-ArchiveSlotSelectionMenu";
         m_screen.AllowGoBack = false;
         m_screen.OnGoBack += Close;
         m_screen.Content.VerticalSpacing = ArchiveMenuEntry.SLOT_TOTAL_HEIGHT;
@@ -100,7 +101,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
             : Strings.UnnamedSlotInfo(index: m_selectedSlotIndex); // $"Target: Slot {index}."
 
-        var statusLabel = new TextLabel("Sfm-StatusLabel");
+        var statusLabel = new TextLabel("SFM-StatusLabel");
 
         // By default, text has a component that changes the line spacing to -0.33f, which is bad for multiline strings.
         var removedAlign = statusLabel.Text.GetComponent<FixVerticalAlign>();

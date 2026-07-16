@@ -39,7 +39,7 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		m_iconSelected = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_03_selected.png");
 
 		var icon = transform.Find("Trash Icon")!;
-		icon.name = $"{assetName} Icon";
+		icon.name = $"SFM-{assetName}Icon";
 
 		m_iconImage = icon.gameObject.GetComponent<Image>();
 		m_iconImage!.overrideSprite = m_iconIdle;
