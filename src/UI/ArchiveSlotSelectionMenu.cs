@@ -104,11 +104,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         var statusLabel = new TextLabel("SFM-StatusLabel");
 
         // By default, text has a component that changes the line spacing to -0.33f, which is bad for multiline strings.
-        var removedAlign = statusLabel.Text.GetComponent<FixVerticalAlign>();
-        if (removedAlign != null)
-        {
-            UnityEngine.Object.Destroy(removedAlign);
-        }
+        SfmUtil.RemoveComponent<FixVerticalAlign>(statusLabel.Text.gameObject);
 
         statusLabel.Text.lineSpacing = 1f;
         statusLabel.Text.text = $"{slotInfo}\n{Strings.LoadingText}"; // "Loading save slots..."

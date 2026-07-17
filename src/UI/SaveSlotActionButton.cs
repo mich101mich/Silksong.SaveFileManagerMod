@@ -27,11 +27,7 @@ public class SaveSlotActionButton : MenuButton, ISubmitHandler, IEventSystemHand
 		this.onSubmit = onSubmit;
 		this.buttonType = MenuButton.MenuButtonType.Activate;
 
-		var toRemove = this.GetComponent<ZeroAlphaOnStart>();
-		if (toRemove != null)
-		{
-			UnityEngine.Object.Destroy(toRemove);
-		}
+		SfmUtil.RemoveComponent<ZeroAlphaOnStart>(this.gameObject);
 
 		var assembly = Assembly.GetExecutingAssembly();
 		m_iconIdle = LoadTexture(assembly, $"SaveFileManagerMod.assets.finished.{assetName}_01_idle.png");

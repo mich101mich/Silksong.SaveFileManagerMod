@@ -36,15 +36,14 @@ public partial class ArchiveMenuEntry : TextButton
 
         base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
-        var textButton = GetChild(base.Container, "TextButton")!;
+        var textButton = SfmUtil.GetChild(base.Container, "TextButton")!;
         textButton.name = "SFM-ArchiveSaveSlot-Inner";
         textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
         var nameText = base.ButtonText.gameObject;
         nameText.name = "SFM-SaveSlotName";
 
-        var oldFitter = nameText.GetComponent<ContentSizeFitter>()!;
-        UnityEngine.Object.Destroy(oldFitter);
+        SfmUtil.RemoveComponent<ContentSizeFitter>(nameText);
 
         // Name: Top-Aligned against the parent, full width.
         var nameTransform = nameText.GetComponent<RectTransform>()!;
@@ -64,8 +63,7 @@ public partial class ArchiveMenuEntry : TextButton
             return;
         }
 
-        var oldMove = preview.GetComponent<ChangePositionByLanguage>()!;
-        UnityEngine.Object.Destroy(oldMove);
+        SfmUtil.RemoveComponent<ChangePositionByLanguage>(preview);
 
         // Preview: Top-Aligned against the parent but below the name text, full width.
         var previewTransform = preview.GetComponent<RectTransform>()!;
@@ -156,15 +154,15 @@ public partial class ArchiveMenuEntry : TextButton
 
         m_silkBar = new()
         {
-            sizer = GetChildComponent<LayoutElement>(threadSpool, "Rod Sizer")!,
+            sizer = SfmUtil.GetChildComponent<LayoutElement>(threadSpool, "Rod Sizer")!,
             widthPerSilk = template.silkBar.widthPerSilk,
             baseWidth = template.silkBar.baseWidth,
             silkChunkTemplate = silkChunkTemplateTransform!.gameObject.GetComponent<Image>()!,
             silkChunkVariants = template.silkBar.silkChunkVariants,
             silkChunkParent = threadSpoolTransform.Find("Rod Sizer/Inside")!,
-            notBroken = GetChild(threadSpool, "Rod Sizer/NotBroken")!,
-            brokenAlt = GetChild(threadSpool, "Rod Sizer/Broken")!,
-            cursedAlt = GetChild(threadSpool, "Rod Sizer/Broken Cursed")!,
+            notBroken = SfmUtil.GetChild(threadSpool, "Rod Sizer/NotBroken")!,
+            brokenAlt = SfmUtil.GetChild(threadSpool, "Rod Sizer/Broken")!,
+            cursedAlt = SfmUtil.GetChild(threadSpool, "Rod Sizer/Broken Cursed")!,
         };
 
         if (stats.PermadeathMode == GlobalEnums.PermadeathModes.Dead)
@@ -227,33 +225,6 @@ public partial class ArchiveMenuEntry : TextButton
         locationText.fontSize = 40;
     }
 
-    public GameObject? GetChild(GameObject parent, string childPath)
-    {
-        var child = parent.transform.Find(childPath);
-        if (child == null)
-        {
-            SfmLogger.LogError($"Could not find child '{childPath}' in '{parent.name}'");
-            return null;
-        }
-        return child.gameObject;
-    }
-
-    public T? GetChildComponent<T>(GameObject parent, string childPath) where T : class
-    {
-        var child = GetChild(parent, childPath);
-        if (child == null)
-        {
-            return null;
-        }
-        var component = child.GetComponent<T>();
-        if (component == null)
-        {
-            SfmLogger.LogError($"Could not find component '{typeof(T).Name}' in '{parent.name}/{childPath}'");
-            return null;
-        }
-        return component;
-    }
-
     public (GameObject obj, RectTransform transform) CloneChild(GameObject target, SaveSlotButton slot, string childPath)
     {
         var parent = slot.gameObject;
@@ -261,7 +232,7 @@ public partial class ArchiveMenuEntry : TextButton
         var lastSlashIndex = childPath.LastIndexOf('/');
         var childName = lastSlashIndex >= 0 ? childPath.Substring(lastSlashIndex + 1) : childPath;
 
-        var child = GetChild(parent, childPath);
+        var child = SfmUtil.GetChild(parent, childPath);
         if (child == null)
         {
             var obj = new GameObject($"MissingChild-{childName}");

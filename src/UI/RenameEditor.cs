@@ -1,5 +1,3 @@
-using Silksong.ModMenu.Elements;
-using Silksong.ModMenu.Models;
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,8 +10,7 @@ public class RenameEditor : IDisposable
     public SaveSlotButton m_saveSlotButton;
     public InputHandler m_inputHandler;
 
-    public TextInput<string> m_renameInput;
-    public bool m_inputHasEnded = false;
+    public InputField m_renameInput;
 
     public bool IsOpen = false;
 
@@ -27,21 +24,16 @@ public class RenameEditor : IDisposable
         m_onCloseCallback = onCloseCallback;
 
         m_renameInput = BuildTextInput(m_saveSlotButton);
-
-        m_renameInput.OnTextValueChanged += onValueChangedCallback;
-
-        // Ideally I would listen to m_renameInput.InputField.onSubmit to see if the user pressed enter, but that doesn't seem to work.
-        // There is also a wasCancelled property on the InputField, but that isn't always set when e.g. switching focus.
-        // Also, this function is called before our Refresh() and before m_inputHandler.inputActions is updated, so we can't do anything in this callback.
-        // So instead, we just set a flag and check in the Refresh() method what kind of exit the user did (cancel or submit).
-        m_renameInput.InputField.onEndEdit.AddListener(_ => m_inputHasEnded = true);
+        m_renameInput.onValueChanged.AddListener(value => onValueChangedCallback(value));
+        m_renameInput.onSubmit.AddListener(_ => Close(saveChanges: true));
+        m_renameInput.onEndEdit.AddListener(_ => Close(saveChanges: false));
 
         SetRenameEditorVisible(visible: false);
     }
 
     public void Dispose()
     {
-        m_renameInput.Dispose();
+        UnityEngine.Object.Destroy(m_renameInput.gameObject);
     }
 
     public void Refresh()
@@ -49,30 +41,6 @@ public class RenameEditor : IDisposable
         if (!IsOpen)
         {
             return;
-        }
-
-        if (m_inputHandler.acceptingInput)
-        {
-            if (m_inputHandler.inputActions.MenuCancel.WasPressed)
-            {
-                SfmLogger.LogInfo("MenuCancel pressed, closing rename editor without saving changes.");
-                m_inputHandler.inputActions.MenuCancel.ClearInputState();
-                Close(saveChanges: false);
-                return;
-            }
-            else if (m_inputHandler.inputActions.MenuSubmit.WasPressed)
-            {
-                SfmLogger.LogInfo("MenuSubmit pressed, closing rename editor and saving changes.");
-                m_inputHandler.inputActions.MenuSubmit.ClearInputState();
-                Close(saveChanges: true);
-                return;
-            }
-        }
-
-        if (m_inputHasEnded)
-        {
-            SfmLogger.LogInfo("Input field lost focus, closing rename editor without saving changes.");
-            Close(saveChanges: false);
         }
     }
 
@@ -83,15 +51,13 @@ public class RenameEditor : IDisposable
             return;
         }
 
-        m_inputHasEnded = false;
-
         if (SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out string name))
         {
-            m_renameInput.Value = name;
+            m_renameInput.text = name;
         }
         else
         {
-            m_renameInput.Value = string.Empty;
+            m_renameInput.text = string.Empty;
         }
 
         IsOpen = true;
@@ -107,8 +73,8 @@ public class RenameEditor : IDisposable
         // 1) clicking outside of the input field to close it, and 2) moving the cursor in the input field with the mouse.
         UIManager.instance.inputModule.focusOnMouseHover = false;
 
-        EventSystem.current?.SetSelectedGameObject(m_renameInput.InputField.gameObject);
-        m_renameInput.InputField.ActivateInputField();
+        EventSystem.current?.SetSelectedGameObject(m_renameInput.gameObject);
+        m_renameInput.ActivateInputField();
     }
 
     public void Close(bool saveChanges)
@@ -122,7 +88,7 @@ public class RenameEditor : IDisposable
         {
             UIManager.instance.uiAudioPlayer.PlaySubmit();
 
-            SaveName.SetSlotName(m_saveSlotButton.SaveSlotIndex, m_renameInput.InputField.text);
+            SaveName.SetSlotName(m_saveSlotButton.SaveSlotIndex, m_renameInput.text);
         }
         else
         {
@@ -137,38 +103,66 @@ public class RenameEditor : IDisposable
 
     public void SetRenameEditorVisible(bool visible)
     {
-        m_renameInput.Container.SetActive(visible);
-        m_renameInput.Interactable = visible;
+        m_renameInput.gameObject.SetActive(visible);
+        // m_renameInput.Interactable = visible;
     }
 
-    public static TextInput<string> BuildTextInput(SaveSlotButton saveSlotButton)
+    public static InputField BuildTextInput(SaveSlotButton saveSlotButton)
     {
-        var input = new TextInput<string>("", TextModels.ForStrings(), "");
-        input.Container.name = "SFM-RenameEditor";
-        input.InputField.gameObject.name = "SFM-RenameEditorTextInput";
-        input.InputField.textComponent.gameObject.name = "SFM-RenameEditorText";
-
         RectTransform slotRect = saveSlotButton.GetComponent<RectTransform>();
         RectTransform actionRowRect = saveSlotButton.clearSaveButton.GetComponent<RectTransform>();
 
-        input.RectTransform.SetParent(actionRowRect.parent, worldPositionStays: false);
-        input.RectTransform.anchorMin = actionRowRect.anchorMin;
-        input.RectTransform.anchorMax = actionRowRect.anchorMax;
-        input.RectTransform.pivot = actionRowRect.pivot;
-        input.RectTransform.anchoredPosition = new Vector2(0f, actionRowRect.anchoredPosition.y);
-        input.RectTransform.sizeDelta = new Vector2(slotRect.rect.width, actionRowRect.rect.height);
+        var canvas = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas")!;
+        var input = UnityEngine.Object.Instantiate(
+            SfmUtil.GetChild(canvas, "GameOptionsMenuScreen/Content/CamShakeSetting/CamShakePopupOption")!,
+            actionRowRect.parent,
+            worldPositionStays: false
+        );
+        input.SetActive(false);
+        input.name = "SFM-RenameEditor";
 
-        RectTransform inputRect = input.InputField.GetComponent<RectTransform>();
-        inputRect.sizeDelta = new Vector2(slotRect.rect.width, actionRowRect.rect.height);
+        // TODO: copy arrows from MenuOptionHorizontal and get them working somehow
 
-        input.LabelText.gameObject.SetActive(value: false);
-        input.DescriptionText.gameObject.SetActive(value: false);
+        SfmUtil.RemoveComponent<EventTrigger>(input);
+        SfmUtil.RemoveComponent<FixVerticalAlign>(input);
+        SfmUtil.RemoveComponentImmediate<MenuOptionHorizontal>(input); // We must delete the Selectable immediately to add a new one.
+        SfmUtil.RemoveComponent<MenuSetting>(input);
+        UnityEngine.Object.Destroy(SfmUtil.GetChild(input, "Menu Option Label"));
+        UnityEngine.Object.Destroy(SfmUtil.GetChild(input, "Description"));
 
-        input.InputField.characterLimit = 48;
-        input.InputField.lineType = InputField.LineType.SingleLine;
-        input.InputField.textComponent.fontSize = saveSlotButton.locationText.fontSize;
+        var text = SfmUtil.GetChildComponent<Text>(input, "Menu Option Text")!;
+        text.gameObject.name = "SFM-RenameEditorText";
+        SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(text.gameObject);
+        SfmUtil.RemoveComponent<FixVerticalAlign>(text.gameObject);
+        text.fontSize = saveSlotButton.locationText.fontSize;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.alignment = TextAnchor.MiddleRight;
+        text.lineSpacing = 1f;
 
-        return input;
+        var textInputField = input.AddComponent<InputField>();
+        textInputField.textComponent = text;
+        textInputField.caretColor = Color.white;
+        textInputField.contentType = InputField.ContentType.Standard;
+        textInputField.lineType = InputField.LineType.MultiLineSubmit;
+        textInputField.caretWidth = 8;
+        textInputField.text = "";
+        textInputField.characterLimit = 32;
+
+        var inputTransform = input.GetComponent<RectTransform>();
+        inputTransform.anchorMin = actionRowRect.anchorMin;
+        inputTransform.anchorMax = actionRowRect.anchorMax;
+        inputTransform.pivot = actionRowRect.pivot;
+        inputTransform.anchoredPosition = new Vector2(0f, actionRowRect.anchoredPosition.y);
+        inputTransform.sizeDelta = new Vector2(slotRect.rect.width, actionRowRect.rect.height);
+
+        RectTransform textTransform = text.gameObject.GetComponent<RectTransform>();
+        textTransform.anchorMin = new Vector2(0f, 0f);
+        textTransform.anchorMax = new Vector2(1f, 1f);
+        textTransform.anchoredPosition = new Vector2(0f, 0f);
+        textTransform.sizeDelta = new Vector2(0f, 0f);
+
+        return textInputField;
     }
 
 }
