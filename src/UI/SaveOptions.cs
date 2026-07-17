@@ -12,6 +12,7 @@ public class SaveOptions : MonoBehaviour
     public RenameEditor m_renameEditor = null!;
 
     public Text m_nameLabel = null!;
+    public Text m_defeatedNameLabel = null!;
 
     public void Initialize(SaveSlotButton button)
     {
@@ -22,9 +23,13 @@ public class SaveOptions : MonoBehaviour
 
         m_actionRow = new SaveSlotActionRow(m_saveSlotButton, OpenRenameEditor, OpenArchiveMenu);
 
-        m_renameEditor = new RenameEditor(m_saveSlotButton, OnRenameEditorClosed, (value) => m_nameLabel.text = value);
+        m_renameEditor = new RenameEditor(m_saveSlotButton, OnRenameEditorClosed, (value) =>
+        {
+            m_nameLabel.text = value;
+            m_defeatedNameLabel.text = value;
+        });
 
-        m_nameLabel = CreateNameLabel();
+        CreateNameLabels();
     }
 
     public void OnDestroy()
@@ -32,11 +37,10 @@ public class SaveOptions : MonoBehaviour
         SfmLogger.LogInfo($"Destroying SaveOptions for {m_saveSlotButton.name}");
 
         m_actionRow.Dispose();
+        m_renameEditor.Dispose();
 
-        if (m_nameLabel != null)
-        {
-            UnityEngine.Object.Destroy(m_nameLabel.gameObject);
-        }
+        UnityEngine.Object.Destroy(m_nameLabel.gameObject);
+        UnityEngine.Object.Destroy(m_defeatedNameLabel.gameObject);
     }
 
     public void SetupNavigation(SaveOptions? previousOptions, SaveOptions? nextOptions)
@@ -63,6 +67,8 @@ public class SaveOptions : MonoBehaviour
             bool hasName = SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out name);
             m_nameLabel.text = name;
             m_nameLabel.gameObject.SetActive(hasName);
+            m_defeatedNameLabel.text = name;
+            m_defeatedNameLabel.gameObject.SetActive(hasName);
         }
     }
 
@@ -74,7 +80,6 @@ public class SaveOptions : MonoBehaviour
         }
 
         m_actionRow.SetButtonVisibility(visible: false);
-        // m_nameLabel.gameObject.SetActive(false);
 
         m_renameEditor.Open();
     }
@@ -95,18 +100,25 @@ public class SaveOptions : MonoBehaviour
         m_archiveMenu.OpenForSlot(m_saveSlotButton);
     }
 
-    public Text CreateNameLabel()
+    public void CreateNameLabels()
     {
-        Text label = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, m_saveSlotButton.locationText.transform.parent);
-        label.name = "SFM-SaveNameLabel";
-        label.fontSize = Mathf.Max(16, m_saveSlotButton.locationText.fontSize - 6);
-        label.color = new Color(1f, 0.86f, 0.58f, 1f);
-        label.raycastTarget = false;
-        label.rectTransform.anchoredPosition = m_saveSlotButton.locationText.rectTransform.anchoredPosition + new Vector2(0f, 58f);
-        label.gameObject.SetActive(value: false);
+        // Normal saves: Display below the location text
+        m_nameLabel = UnityEngine.Object.Instantiate(m_saveSlotButton.locationText, m_saveSlotButton.locationText.transform.parent);
+        m_nameLabel.name = "SFM-SaveNameLabel";
+        m_nameLabel.fontSize = Mathf.Max(16, m_saveSlotButton.locationText.fontSize - 6);
+        m_nameLabel.color = new Color(1f, 0.86f, 0.58f, 1f);
+        m_nameLabel.raycastTarget = false;
+        m_nameLabel.gameObject.SetActive(value: false);
 
-        // TODO: Have this also be displayed on "Defeated" files
-
-        return label;
+        // Defeated saves: Anchor bottom-right on the defeated background.
+        // locationText is disabled for defeated saves, while defeatedBackground is only enabled for defeated saves
+        // => The game automatically only shows one of the two.
+        m_defeatedNameLabel = UnityEngine.Object.Instantiate(m_nameLabel, m_saveSlotButton.defeatedBackground.transform);
+        m_defeatedNameLabel.name = "SFM-SaveNameLabel-Defeated";
+        m_defeatedNameLabel.rectTransform.anchorMin = new Vector2(1f, 0f);
+        m_defeatedNameLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
+        m_defeatedNameLabel.rectTransform.anchoredPosition = new Vector2(-30f, 53f);
+        m_defeatedNameLabel.rectTransform.pivot = new Vector2(1f, 0f);
+        m_defeatedNameLabel.alignment = TextAnchor.LowerRight;
     }
 }

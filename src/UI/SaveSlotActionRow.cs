@@ -93,7 +93,7 @@ public class SaveSlotActionRow : IDisposable
         }
 
         m_restore.SetUsable(!isBlocked && !isEmpty && !isDefeated);
-        m_rename.SetUsable(!isBlocked && !isEmpty && !isDefeated);
+        m_rename.SetUsable(!isBlocked && !isEmpty);
         m_archive.SetUsable(!isBlocked);
         m_clear.SetUsable(!isBlocked && !isEmpty);
 
