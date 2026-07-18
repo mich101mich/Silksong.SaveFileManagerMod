@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -62,11 +63,10 @@ public class RenameEditor : IDisposable
         // this, but I honestly can't figure out where the submit events for the other buttons are coming from.
         // It would be possible to simply set allowMouseInput to false, which would prevent this as well, but that also prevents
         // 1) clicking outside of the input field to close it, and 2) moving the cursor in the input field with the mouse.
-        UIManager.instance.inputModule.focusOnMouseHover = false;
+        var ui = UIManager.instance;
+        ui.inputModule.focusOnMouseHover = false;
 
-        m_renameInput.gameObject.SetActive(true);
-        EventSystem.current?.SetSelectedGameObject(m_renameInput.gameObject);
-        m_renameInput.ActivateInputField();
+        ui.StartCoroutine(FadeInAndSelect());
 
         m_leftCursor.ResetTrigger(MenuSelectable._hidePropId);
         m_leftCursor.SetTrigger(MenuSelectable._showPropId);
@@ -81,26 +81,61 @@ public class RenameEditor : IDisposable
             return;
         }
 
+        var ui = UIManager.instance;
         if (saveChanges)
         {
-            UIManager.instance.uiAudioPlayer.PlaySubmit();
+            ui.uiAudioPlayer.PlaySubmit();
 
             SaveName.SetSlotName(m_saveSlotButton.SaveSlotIndex, m_renameInput.text);
         }
         else
         {
-            UIManager.instance.uiAudioPlayer.PlayCancel();
+            ui.uiAudioPlayer.PlayCancel();
         }
 
-        m_renameInput.gameObject.SetActive(false);
+        ui.StartCoroutine(FadeOut());
         m_leftCursor.ResetTrigger(MenuSelectable._showPropId);
         m_leftCursor.SetTrigger(MenuSelectable._hidePropId);
         m_rightCursor.ResetTrigger(MenuSelectable._showPropId);
         m_rightCursor.SetTrigger(MenuSelectable._hidePropId);
 
         IsOpen = false;
-        UIManager.instance.inputModule.focusOnMouseHover = true;
+        ui.inputModule.focusOnMouseHover = true;
         m_onCloseCallback?.Invoke();
+    }
+
+    public IEnumerator FadeInAndSelect()
+    {
+        m_renameInput.gameObject.SetActive(true);
+
+        var baseColor = m_renameInput.textComponent.color;
+        m_renameInput.textComponent.color = baseColor with { a = 0f };
+
+        var alpha = 0f;
+        while (alpha < 1f)
+        {
+            alpha += Time.unscaledDeltaTime * UIManager.instance.MENU_FADE_SPEED;
+            m_renameInput.textComponent.color = baseColor with { a = alpha };
+            yield return null;
+        }
+        m_renameInput.textComponent.color = baseColor with { a = 1f };
+
+        EventSystem.current?.SetSelectedGameObject(m_renameInput.gameObject);
+        m_renameInput.ActivateInputField();
+    }
+
+    public IEnumerator FadeOut()
+    {
+        var baseColor = m_renameInput.textComponent.color;
+        var alpha = 1f;
+        while (alpha > 0f)
+        {
+            alpha -= Time.unscaledDeltaTime * UIManager.instance.MENU_FADE_SPEED;
+            m_renameInput.textComponent.color = baseColor with { a = alpha };
+            yield return null;
+        }
+        m_renameInput.textComponent.color = baseColor with { a = 0f };
+        m_renameInput.gameObject.SetActive(false);
     }
 
     public static InputField BuildTextInput(SaveSlotButton saveSlotButton, out Animator leftCursor, out Animator rightCursor)
