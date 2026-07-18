@@ -84,9 +84,9 @@
 
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
     <ItemGroup>
-      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="$(AssemblyTitle)-$(Version)/" />
-      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="$(AssemblyTitle)-$(Version)/" />
-      <Binaries Include="languages/*.json" LocalDir="languages" PackDir="$(AssemblyTitle)-$(Version)/languages" />
+      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="$(AssemblyTitle)/" />
+      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="$(AssemblyTitle)/" />
+      <Binaries Include="languages/*.json" LocalDir="languages" PackDir="$(AssemblyTitle)/languages" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
@@ -97,13 +97,13 @@
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongScriptsFolder)/" Condition="'$(Configuration)' == 'Debug' And '$(SilksongScriptsFolder)' != '' And Exists('$(SilksongScriptsFolder)')" />
 
     <!-- Thunderstore packaging -->
-    <!-- <RemoveDir Directories="$(ThunderstoreDir)/temp;$(ThunderstoreDir)/dist" /> -->
-    <!-- <MakeDir Directories="$(ThunderstoreDir)/temp" /> -->
-    <!-- <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" /> -->
-    <!-- <PropertyGroup>
+    <RemoveDir Directories="$(ThunderstoreDir)/temp;$(ThunderstoreDir)/dist" />
+    <MakeDir Directories="$(ThunderstoreDir)/temp" />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/temp/%(Binaries.PackDir)" />
+    <PropertyGroup>
       <ThunderstorePkgVersion>$([System.String]::Copy($(Version)).Split('-')[0])</ThunderstorePkgVersion>
-    </PropertyGroup> -->
-    <!-- <Exec Command="dotnet tool restore" /> -->
-    <!-- <Exec Command="dotnet tcli build \-\-config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; \-\-package-name &quot;$(AssemblyTitle)&quot; \-\-package-version $(ThunderstorePkgVersion)" StandardOutputImportance="High" StandardErrorImportance="High" /> -->
+    </PropertyGroup>
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(ThunderstorePkgVersion)" StandardOutputImportance="High" StandardErrorImportance="High" />
   </Target>
 </Project>

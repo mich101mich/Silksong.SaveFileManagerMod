@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Carregar do arquivo",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Arquivar / Trocar",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Destino: slot {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Destino: slot {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Carregando slots de salvamento...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "Nenhum salvamento carregável encontrado",
+    "ArchiveMenuEntry.Error": "Erro",
+    "ArchiveMenuEntry.Unnamed": "Sem nome",
+    "ArchiveMenuEntry.Empty": "Vazio"
+}

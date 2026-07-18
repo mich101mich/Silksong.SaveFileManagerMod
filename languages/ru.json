@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Загрузить из архива",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Архивировать / Обменять",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Цель: слот {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Цель: слот {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Загрузка слотов сохранения...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "Подходящие для загрузки сохранения не найдены",
+    "ArchiveMenuEntry.Error": "Ошибка",
+    "ArchiveMenuEntry.Unnamed": "Без названия",
+    "ArchiveMenuEntry.Empty": "Пусто"
+}

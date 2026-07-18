@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Charger depuis l’archive",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Archiver / Échanger",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Cible : emplacement {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Cible : emplacement {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Chargement des emplacements de sauvegarde...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "Aucune sauvegarde chargeable trouvée",
+    "ArchiveMenuEntry.Error": "Erreur",
+    "ArchiveMenuEntry.Unnamed": "Sans nom",
+    "ArchiveMenuEntry.Empty": "Vide"
+}

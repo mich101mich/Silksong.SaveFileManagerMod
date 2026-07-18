@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "アーカイブから読み込む",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "アーカイブ / 入れ替え",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "対象: スロット {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "対象: スロット {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "セーブスロットを読み込んでいます...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "読み込み可能なセーブデータが見つかりません",
+    "ArchiveMenuEntry.Error": "エラー",
+    "ArchiveMenuEntry.Unnamed": "名前なし",
+    "ArchiveMenuEntry.Empty": "空"
+}

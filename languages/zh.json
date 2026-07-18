@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "从存档库加载",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "移入存档库 / 交换",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "目标：存档槽 {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "目标：存档槽 {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "正在加载存档槽...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "未找到可加载的存档",
+    "ArchiveMenuEntry.Error": "错误",
+    "ArchiveMenuEntry.Unnamed": "未命名",
+    "ArchiveMenuEntry.Empty": "空"
+}

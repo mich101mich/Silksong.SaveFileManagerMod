@@ -1,0 +1,11 @@
+{
+    "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Cargar desde el archivo",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Archivar / Intercambiar",
+    "ArchiveSlotSelectionMenu.NamedSlotInfo": "Destino: ranura {index}. \"{name}\"",
+    "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Destino: ranura {index}.",
+    "ArchiveSlotSelectionMenu.LoadingText": "Cargando ranuras de guardado...",
+    "ArchiveSlotSelectionMenu.NoLoadableSavesFound": "No se encontraron partidas cargables",
+    "ArchiveMenuEntry.Error": "Error",
+    "ArchiveMenuEntry.Unnamed": "Sin nombre",
+    "ArchiveMenuEntry.Empty": "Vacío"
+}
