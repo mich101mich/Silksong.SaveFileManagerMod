@@ -1,6 +1,10 @@
 name: Build
 
 on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
   workflow_dispatch:
     inputs:
       force_thunderstore:
@@ -20,7 +24,16 @@ permissions:
   attestations: write
 
 jobs:
+  localization-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check language files
+        run: python3 scripts/check_language_files.py
+
   build:
+    needs: localization-check
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
