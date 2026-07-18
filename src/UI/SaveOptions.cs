@@ -55,11 +55,7 @@ public class SaveOptions : MonoBehaviour
 
     public void SyncFromSlotState()
     {
-        if (m_renameEditor.IsOpen)
-        {
-            m_renameEditor.Refresh();
-        }
-        else
+        if (!m_renameEditor.IsOpen)
         {
             m_actionRow.Refresh();
 
