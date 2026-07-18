@@ -89,7 +89,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         var title = m_selectedSlotIsEmpty
             ? Strings.TitleLoadIntoEmpty // "Load from archive"
-            : Strings.TitleArchiveReplace; // "Archive / Replace"
+            : Strings.TitleArchiveSwap; // "Archive / Swap"
 
         m_screen = new ScrollingMenuScreen(title);
         m_screen.Container.name = "SFM-ArchiveSlotSelectionMenu";

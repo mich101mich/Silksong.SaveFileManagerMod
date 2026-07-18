@@ -1,6 +1,6 @@
 {
     "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Load from archive",
-    "ArchiveSlotSelectionMenu.TitleArchiveReplace": "Archive / Replace",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Archive / Swap",
     "ArchiveSlotSelectionMenu.NamedSlotInfo": "Target: Slot {index}. \"{name}\"",
     "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Target: Slot {index}.",
     "ArchiveSlotSelectionMenu.LoadingText": "Loading save slots...",

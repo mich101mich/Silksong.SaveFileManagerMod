@@ -1,6 +1,6 @@
 {
     "ArchiveSlotSelectionMenu.TitleLoadIntoEmpty": "Aus Archiv laden",
-    "ArchiveSlotSelectionMenu.TitleArchiveReplace": "Archivieren / Ersetzen",
+    "ArchiveSlotSelectionMenu.TitleArchiveSwap": "Archivieren / Tauschen",
     "ArchiveSlotSelectionMenu.NamedSlotInfo": "Ziel: Slot {index}. \"{name}\"",
     "ArchiveSlotSelectionMenu.UnnamedSlotInfo": "Ziel: Slot {index}.",
     "ArchiveSlotSelectionMenu.LoadingText": "Lade Spielstände...",

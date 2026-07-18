@@ -33,7 +33,7 @@ public partial class ArchiveSlotSelectionMenu
     public class Strings : StringHelper
     {
         public static string TitleLoadIntoEmpty => Get("ArchiveSlotSelectionMenu.TitleLoadIntoEmpty", "Load from archive");
-        public static string TitleArchiveReplace => Get("ArchiveSlotSelectionMenu.TitleArchiveReplace", "Archive / Replace");
+        public static string TitleArchiveSwap => Get("ArchiveSlotSelectionMenu.TitleArchiveSwap", "Archive / Swap");
         public static string NamedSlotInfo(string name, int index) => Get("ArchiveSlotSelectionMenu.NamedSlotInfo", "Target: Slot {index}. \"{name}\"", new { name, index });
         public static string UnnamedSlotInfo(int index) => Get("ArchiveSlotSelectionMenu.UnnamedSlotInfo", "Target: Slot {index}.", new { index });
         public static string LoadingText => Get("ArchiveSlotSelectionMenu.LoadingText", "Loading save slots...");
