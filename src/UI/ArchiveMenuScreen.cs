@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using System.Collections;
+using System.Linq;
 
 namespace SaveFileManagerMod.UI;
 
@@ -18,7 +19,6 @@ public sealed class ArchiveMenuScreen : IDisposable
     public Slider m_verticalSlider;
     public MenuButton m_backButton;
     public List<ArchiveMenuEntry> m_entries = new List<ArchiveMenuEntry>();
-    public ArchiveMenuScreenDriver m_driver;
     public bool m_disposed;
 
     public ArchiveMenuScreen(string title, string statusMessage, Action onGoBack, out Text statusText)
@@ -57,7 +57,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         scrollTransform.anchorMax = new Vector2(0.5f, 1f);
         scrollTransform.pivot = new Vector2(0.5f, 1f);
         scrollTransform.anchoredPosition = new Vector2(0f, -330f);
-        scrollTransform.sizeDelta = new Vector2(1510f, Mathf.Ceil(105f * 8.334f));
+        scrollTransform.sizeDelta = new Vector2(1510f, 875f);
 
         var viewport = new GameObject("Viewport")
         {
@@ -97,11 +97,14 @@ public sealed class ArchiveMenuScreen : IDisposable
         m_scrollRect.verticalNormalizedPosition = 1f;
 
         m_verticalSlider = CreateVerticalSlider(scrollTransform);
-        m_verticalSlider.onValueChanged.AddListener(UpdateScrollRectFromSlider);
-        m_scrollRect.onValueChanged.AddListener(UpdateSliderFromScrollRect);
-
-        m_driver = m_container.AddComponent<ArchiveMenuScreenDriver>();
-        m_driver.Initialize(this);
+        m_verticalSlider.onValueChanged.AddListener(value =>
+        {
+            if (!Mathf.Approximately(m_scrollRect.verticalNormalizedPosition, value))
+            {
+                m_scrollRect.verticalNormalizedPosition = value;
+            }
+        });
+        m_scrollRect.onValueChanged.AddListener(position => m_verticalSlider.SetValueWithoutNotify(position.y));
 
         statusText = CreateStatusLabel(statusMessage);
     }
@@ -144,6 +147,9 @@ public sealed class ArchiveMenuScreen : IDisposable
         m_entries.Add(entry);
         entry.Container.transform.SetParent(m_content, false);
         entry.Container.SetActive(true);
+
+        entry.MenuButton.OnSelected += (_) => ScrollIntoView(entry);
+
         UpdateLayout();
     }
 
@@ -170,72 +176,19 @@ public sealed class ArchiveMenuScreen : IDisposable
         }
 
         m_disposed = true;
-        m_verticalSlider.onValueChanged.RemoveListener(UpdateScrollRectFromSlider);
-        m_scrollRect.onValueChanged.RemoveListener(UpdateSliderFromScrollRect);
-        m_backButton.OnSubmitPressed.RemoveAllListeners();
         UnityEngine.Object.Destroy(m_container);
     }
 
-    public void UpdateScrollbarVisibility()
+    public void ScrollIntoView(ArchiveMenuEntry entry)
     {
-        bool shouldShow = m_scrollRect.vertical && m_content.rect.height > m_viewport.rect.height + 0.01f;
-        if (m_verticalSlider.gameObject.activeSelf != shouldShow)
-        {
-            m_verticalSlider.gameObject.SetActive(shouldShow);
-        }
-    }
+        var viewportSize = m_scrollRect.viewport.rect.size;
+        var contentSize = m_scrollRect.content.rect.size;
 
-    public void UpdateSliderFromScrollRect(Vector2 position)
-    {
-        if (!Mathf.Approximately(m_verticalSlider.normalizedValue, position.y))
-        {
-            m_verticalSlider.SetValueWithoutNotify(position.y);
-        }
-    }
+        float targetY = m_scrollRect.content.InverseTransformPoint(entry.Container.transform.position).y + contentSize.y;
 
-    public void UpdateScrollRectFromSlider(float value)
-    {
-        if (!Mathf.Approximately(m_scrollRect.verticalNormalizedPosition, value))
-        {
-            m_scrollRect.verticalNormalizedPosition = value;
-        }
-    }
+        float rawScrollY = (targetY - viewportSize.y * 0.5f) / (contentSize.y - viewportSize.y);
 
-    internal void KeepSelectionVisible()
-    {
-        var selected = EventSystem.current?.currentSelectedGameObject;
-        if (selected == null)
-        {
-            return;
-        }
-
-        int selectedIndex = m_entries.FindIndex(entry => selected.transform.IsChildOf(entry.Container.transform));
-        if (selectedIndex < 0)
-        {
-            return;
-        }
-
-        float rowTop = -(selectedIndex + 1) * ArchiveMenuEntry.SLOT_TOTAL_HEIGHT;
-        float rowBottom = rowTop - ArchiveMenuEntry.SLOT_TOTAL_HEIGHT;
-        float visibleTop = -m_content.anchoredPosition.y;
-        float visibleBottom = visibleTop - m_viewport.rect.height;
-        float offset = m_content.anchoredPosition.y;
-
-        if (rowTop > visibleTop)
-        {
-            offset = -rowTop;
-        }
-        else if (rowBottom < visibleBottom)
-        {
-            offset = -(rowBottom + m_viewport.rect.height);
-        }
-
-        float maxOffset = Mathf.Max(0f, m_content.rect.height - m_viewport.rect.height);
-        offset = Mathf.Clamp(offset, 0f, maxOffset);
-        if (!Mathf.Approximately(offset, m_content.anchoredPosition.y))
-        {
-            m_content.anchoredPosition = new Vector2(m_content.anchoredPosition.x, offset);
-        }
+        m_scrollRect.verticalNormalizedPosition = Math.Clamp(rawScrollY, 0, 1);
     }
 
     public void UpdateLayout()
@@ -261,32 +214,33 @@ public sealed class ArchiveMenuScreen : IDisposable
         if (m_entries.Count == 0)
         {
             m_menuScreen.defaultHighlight = m_backButton;
-            var onlyBack = m_backButton.navigation;
-            onlyBack.mode = Navigation.Mode.Explicit;
-            onlyBack.selectOnUp = m_backButton;
-            onlyBack.selectOnDown = m_backButton;
-            m_backButton.navigation = onlyBack;
+            m_backButton.navigation = m_backButton.navigation with
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = m_backButton,
+                selectOnDown = m_backButton,
+            };
             return;
         }
 
         for (int i = 0; i < m_entries.Count; i++)
         {
             var button = m_entries[i].MenuButton;
-            var navigation = button.navigation;
-            navigation.mode = Navigation.Mode.Explicit;
-            navigation.selectOnUp = i == 0 ? m_backButton : m_entries[i - 1].MenuButton;
-            navigation.selectOnDown = i == m_entries.Count - 1 ? m_backButton : m_entries[i + 1].MenuButton;
-            navigation.selectOnLeft = null;
-            navigation.selectOnRight = null;
-            button.navigation = navigation;
+            button.navigation = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = i == 0 ? m_backButton : m_entries[i - 1].MenuButton,
+                selectOnDown = i == m_entries.Count - 1 ? m_backButton : m_entries[i + 1].MenuButton,
+            };
         }
 
-        var backNavigation = m_backButton.navigation;
-        backNavigation.mode = Navigation.Mode.Explicit;
-        backNavigation.selectOnUp = m_entries[m_entries.Count - 1].MenuButton;
-        backNavigation.selectOnDown = m_entries[0].MenuButton;
-        m_backButton.navigation = backNavigation;
-        m_menuScreen.defaultHighlight = m_entries[0].MenuButton;
+        m_backButton.navigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = m_entries.Last().MenuButton,
+            selectOnDown = m_entries.First().MenuButton,
+        };
+        m_menuScreen.defaultHighlight = m_entries.First().MenuButton;
     }
 
     public static void FitToParent(RectTransform transform)
@@ -335,7 +289,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         handle.name = "Handle";
 
         UnityEngine.Object.DestroyImmediate(originalHandle);
-        UnityEngine.Object.DestroyImmediate(sliderObject.GetComponent<Scrollbar>());
+        SfmUtil.RemoveComponentImmediate<Scrollbar>(sliderObject);
 
         var slider = sliderObject.AddComponent<Slider>();
         slider.handleRect = handleTransform;
@@ -344,21 +298,5 @@ public sealed class ArchiveMenuScreen : IDisposable
         slider.maxValue = 1f;
         slider.SetValueWithoutNotify(1f);
         return slider;
-    }
-}
-
-public sealed class ArchiveMenuScreenDriver : MonoBehaviour
-{
-    public ArchiveMenuScreen? m_screen;
-
-    public void Initialize(ArchiveMenuScreen screen)
-    {
-        m_screen = screen;
-    }
-
-    public void LateUpdate()
-    {
-        m_screen?.KeepSelectionVisible();
-        m_screen?.UpdateScrollbarVisibility();
     }
 }
