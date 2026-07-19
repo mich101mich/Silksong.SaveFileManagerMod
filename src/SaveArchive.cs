@@ -76,8 +76,8 @@ public class SaveArchive
         MovePathInternal(sourceRestoreDir, targetRestoreDir);
 
         // ========== Move modded save data ==========
-        var moddedSourceDir = (string)s_SaveSlotDir.Invoke(null, new object[] { sourceSlotIndex });
-        var moddedTargetDir = (string)s_SaveSlotDir.Invoke(null, new object[] { targetSlotIndex });
+        var moddedSourceDir = GetModdedSaveDataDir(sourceSlotIndex);
+        var moddedTargetDir = GetModdedSaveDataDir(targetSlotIndex);
         MovePathInternal(moddedSourceDir, moddedTargetDir);
     }
 
@@ -98,8 +98,13 @@ public class SaveArchive
         }
     }
 
-    public static MethodInfo s_SaveSlotDir = typeof(Silksong.DataManager.DataPaths)
-        .GetMethod("SaveSlotDir", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Failed to get SaveSlotDir method from DataPaths");
-
+    public static string GetModdedSaveDataDir(int slotIndex)
+    {
+        // This is the directory used by the DataManager mod to store modded save data.
+        // We don't use DataManager here for two reasons:
+        // 1. It does not expose this directory publicly, only subdirectories for specific types of data.
+        // 2. DataManager brings in several other dependencies that are not needed for this mod.
+        var saveDirPath = ((DesktopPlatform)Platform.Current).saveDirPath;
+        return Path.Combine(saveDirPath, "Modded", $"user{slotIndex}");
+    }
 }

@@ -43,7 +43,6 @@
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
     <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
     <PackageReference Include="Silksong.ModMenu" Version="*-*" PrivateAssets="all" />
-    <PackageReference Include="Silksong.DataManager" Version="*-*" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- For your IDE: Use the decompiled source code as project references to enable features like "Go to definition" -->
@@ -62,7 +61,6 @@
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.ImageConversionModule\UnityEngine.ImageConversionModule.csproj" />
     <ProjectReference Include="$(SilksongSourceFolder)\UnityEngine.TextRenderingModule\UnityEngine.TextRenderingModule.csproj" />
     <ProjectReference Include="$(ThirdPartySourceFolder)\ModMenu\Silksong.ModMenu\Silksong.ModMenu.csproj" />
-    <ProjectReference Include="$(ThirdPartySourceFolder)\DataManager\src\Silksong.DataManager.csproj" />
   </ItemGroup>
 
   <!-- Shared Dependencies between all configurations -->
