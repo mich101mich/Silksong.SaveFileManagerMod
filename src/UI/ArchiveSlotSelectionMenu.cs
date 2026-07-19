@@ -17,25 +17,16 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
     public Coroutine? m_openRoutine = null;
     public Coroutine? m_closeRoutine = null;
 
-    public List<ArchiveMenuEntry?> m_rawEntries = new List<ArchiveMenuEntry?>();
+    public Queue<ArchiveMenuEntry?> m_newEntries = new Queue<ArchiveMenuEntry?>();
     public int m_numFilledEntries = 0;
 
     public SaveSlotButton m_templateSlotButton = null!;
 
-    private readonly bool[] m_entryReady = new bool[51];
-    private int m_openGeneration = 0;
-    private bool m_isClosing = false;
+    public bool m_isClosing = false;
 
     public void OnDestroy()
     {
-        m_openGeneration++;
-        if (m_screen != null)
-        {
-            m_screen.Dispose();
-            m_screen = null;
-        }
-
-        IsOpen = false;
+        Close();
     }
 
     public void OpenForSlot(SaveSlotButton slot)
@@ -45,14 +36,19 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             return;
         }
 
+        if (m_closeRoutine != null)
+        {
+            StopCoroutine(m_closeRoutine);
+            m_closeRoutine = null;
+        }
+
         m_selectedSlotIndex = slot.SaveSlotIndex;
         m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
         m_templateSlotButton = slot;
         IsOpen = true;
         m_isClosing = false;
 
-        int generation = ++m_openGeneration;
-        m_openRoutine = StartCoroutine(OpenRoutine(generation));
+        m_openRoutine = StartCoroutine(OpenRoutine());
     }
 
     public void Close()
@@ -63,7 +59,6 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         }
 
         m_isClosing = true;
-        m_openGeneration++;
         if (m_openRoutine != null)
         {
             StopCoroutine(m_openRoutine);
@@ -88,7 +83,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         }
     }
 
-    public IEnumerator OpenRoutine(int generation)
+    public IEnumerator OpenRoutine()
     {
         // Prevent input (mostly cancelling) until the menu is open.
         // Input will be resumed by ui.ShowMenu();
@@ -100,36 +95,25 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             ? Strings.TitleLoadIntoEmpty // "Load from archive"
             : Strings.TitleArchiveSwap; // "Archive / Swap"
 
-        m_screen = new ArchiveMenuScreen(title, Close);
-
         var slotInfo = SaveName.TryGetSlotName(m_selectedSlotIndex, out string slotName)
             ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
             : Strings.UnnamedSlotInfo(index: m_selectedSlotIndex); // $"Target: Slot {index}."
+        var statusMessage = $"{slotInfo}\n{Strings.LoadingText}"; // "Loading save slots..."
 
-        var statusText = m_screen.AddStatusLabel($"{slotInfo}\n{Strings.LoadingText}"); // "Loading save slots..."
+        m_screen = new ArchiveMenuScreen(title, statusMessage, Close, out Text statusText);
 
-        m_rawEntries.Clear();
-        m_entryReady[0] = true;
-        for (int i = 0; i <= 50; i++)
-        {
-            m_rawEntries.Add(null);
-            m_entryReady[i] = i == 0;
-        }
+        m_newEntries.Clear();
         m_numFilledEntries = 0;
 
         // Add the first entries immediately so that there is something to select
         for (int i = 1; i <= 4; i++)
         {
-            AddEntry(i, generation);
+            AddEntry(i);
         }
-        yield return new WaitUntil(() => generation != m_openGeneration || FirstEntriesReady());
-        if (generation != m_openGeneration)
-        {
-            yield break;
-        }
+        yield return new WaitUntil(() => m_newEntries.Count == 4);
         for (int i = 1; i <= 4; i++)
         {
-            if (m_rawEntries[i] is ArchiveMenuEntry entry)
+            if (m_newEntries.Dequeue() is ArchiveMenuEntry entry)
             {
                 m_screen.Add(entry);
             }
@@ -142,24 +126,13 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             yield return StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
         }
 
-        if (generation != m_openGeneration)
-        {
-            yield break;
-        }
-
-        m_screen.Show();
-        yield return StartCoroutine(ui.ShowMenu(m_screen.MenuScreen));
+        yield return StartCoroutine(m_screen.Show());
 
         for (int i = 5; i <= 50; i++)
         {
-            AddEntry(i, generation);
-            int pendingSlot = i;
-            yield return new WaitUntil(() => generation != m_openGeneration || m_entryReady[pendingSlot]);
-            if (generation != m_openGeneration)
-            {
-                yield break;
-            }
-            if (m_rawEntries[i] is ArchiveMenuEntry entry)
+            AddEntry(i);
+            yield return new WaitUntil(() => m_newEntries.Count > 0);
+            if (m_newEntries.Dequeue() is ArchiveMenuEntry entry)
             {
                 m_screen.Add(entry);
             }
@@ -178,30 +151,25 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_openRoutine = null;
     }
 
-    public void AddEntry(int slotIndex, int generation)
+    public void AddEntry(int slotIndex)
     {
         if (slotIndex == m_selectedSlotIndex)
         {
-            m_entryReady[slotIndex] = true;
+            m_newEntries.Enqueue(null);
             return;
         }
 
         GameManager.instance.GetSaveStatsForSlot(slotIndex,
-            (stats, message) => OnSaveStatsReceived(generation, slotIndex, stats, message));
+            (stats, message) => OnSaveStatsReceived(slotIndex, stats, message));
     }
 
-    public void OnSaveStatsReceived(int generation, int slotIndex, SaveStats? stats, string? message)
+    public void OnSaveStatsReceived(int slotIndex, SaveStats? stats, string? message)
     {
-        if (generation != m_openGeneration)
-        {
-            return;
-        }
-
         bool isEmpty = stats == null && message == null;
         if (isEmpty && m_selectedSlotIsEmpty)
         {
             // Can't load from an empty slot => don't add it to the list
-            m_entryReady[slotIndex] = true;
+            m_newEntries.Enqueue(null);
             return;
         }
 
@@ -228,8 +196,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         // Don't add the entry immediately, because that causes visual glitches.
         // Only modify UI from the routine.
-        m_rawEntries[slotIndex] = entry;
-        m_entryReady[slotIndex] = true;
+        m_newEntries.Enqueue(entry);
         m_numFilledEntries++;
     }
 
@@ -243,10 +210,7 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         if (m_screen != null)
         {
-            if (m_screen.Container.activeSelf)
-            {
-                yield return StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
-            }
+            yield return StartCoroutine(m_screen.Hide());
 
             m_screen.Dispose();
             m_screen = null;
@@ -257,7 +221,4 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_isClosing = false;
         m_closeRoutine = null;
     }
-
-    private bool FirstEntriesReady() =>
-        m_entryReady[1] && m_entryReady[2] && m_entryReady[3] && m_entryReady[4];
 }

@@ -4,70 +4,81 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace SaveFileManagerMod.UI;
 
 public sealed class ArchiveMenuScreen : IDisposable
 {
-    public readonly GameObject Container;
-    public readonly MenuScreen MenuScreen;
-    public readonly ScrollRect ScrollRect;
+    public GameObject m_container;
+    public MenuScreen m_menuScreen;
+    public ScrollRect m_scrollRect;
+    public RectTransform m_content;
+    public RectTransform m_viewport;
+    public MenuButton m_backButton;
+    public List<ArchiveMenuEntry> m_entries = new List<ArchiveMenuEntry>();
+    public ArchiveMenuScreenDriver m_driver;
+    public bool m_disposed;
 
-    private readonly RectTransform m_content;
-    private readonly RectTransform m_viewport;
-    private readonly MenuButton m_backButton;
-    private readonly List<ArchiveMenuEntry> m_entries = new List<ArchiveMenuEntry>();
-    private readonly ArchiveMenuScreenDriver m_driver;
-    private Text? m_statusText;
-    private bool m_disposed;
-
-    public ArchiveMenuScreen(string title, Action onGoBack)
+    public ArchiveMenuScreen(string title, string statusMessage, Action onGoBack, out Text statusText)
     {
         var canvas = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas")!;
         var optionsScreen = SfmUtil.GetChild(canvas, "OptionsMenuScreen")!;
 
-        Container = UnityEngine.Object.Instantiate(optionsScreen, canvas.transform, false);
-        Container.name = "SFM-ArchiveSlotSelectionMenu";
-        Container.SetActive(false);
+        m_container = UnityEngine.Object.Instantiate(optionsScreen, canvas.transform, false);
+        m_container.name = "SFM-ArchiveSlotSelectionMenu";
+        m_container.SetActive(false);
 
-        SfmUtil.RemoveComponentImmediate<MenuButtonList>(Container);
+        SfmUtil.RemoveComponentImmediate<MenuButtonList>(m_container);
 
-        var oldContent = SfmUtil.GetChild(Container, "Content")!;
+        var oldContent = SfmUtil.GetChild(m_container, "Content")!;
         UnityEngine.Object.DestroyImmediate(oldContent);
 
-        var titleText = SfmUtil.GetChildComponent<Text>(Container, "Title")!;
+        var titleText = SfmUtil.GetChildComponent<Text>(m_container, "Title")!;
         SfmUtil.RemoveComponent<AutoLocalizeTextUI>(titleText.gameObject);
         titleText.text = title;
 
-        MenuScreen = Container.GetComponent<MenuScreen>()!;
-        m_backButton = SfmUtil.GetChildComponent<MenuButton>(Container, "Controls/ApplyButton")!;
+        m_menuScreen = m_container.GetComponent<MenuScreen>()!;
+        m_backButton = SfmUtil.GetChildComponent<MenuButton>(m_container, "Controls/ApplyButton")!;
         SfmUtil.RemoveComponent<EventTrigger>(m_backButton.gameObject);
         m_backButton.OnSubmitPressed = new UnityEvent();
         m_backButton.OnSubmitPressed.AddListener(() => onGoBack());
-        MenuScreen.backButton = m_backButton;
+        m_menuScreen.backButton = m_backButton;
 
-        var scrollPane = new GameObject("SFM-ArchiveScrollPane", typeof(RectTransform), typeof(ScrollRect));
-        scrollPane.layer = Container.layer;
-        var scrollTransform = scrollPane.GetComponent<RectTransform>()!;
-        scrollTransform.SetParent(Container.transform, false);
+        var scrollPane = new GameObject("SFM-ArchiveScrollPane")
+        {
+            layer = m_container.layer
+        };
+
+        var scrollTransform = scrollPane.AddComponent<RectTransform>()!;
+        scrollTransform.SetParent(m_container.transform, false);
         scrollTransform.anchorMin = new Vector2(0.5f, 1f);
         scrollTransform.anchorMax = new Vector2(0.5f, 1f);
         scrollTransform.pivot = new Vector2(0.5f, 1f);
         scrollTransform.anchoredPosition = new Vector2(0f, -330f);
         scrollTransform.sizeDelta = new Vector2(1510f, Mathf.Ceil(105f * 8.334f));
 
-        var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(RectMask2D));
-        viewport.layer = Container.layer;
-        m_viewport = viewport.GetComponent<RectTransform>()!;
+        var viewport = new GameObject("Viewport")
+        {
+            layer = m_container.layer
+        };
+
+        m_viewport = viewport.AddComponent<RectTransform>()!;
         m_viewport.SetParent(scrollTransform, false);
         FitToParent(m_viewport);
-        var viewportImage = viewport.GetComponent<Image>()!;
+
+        var viewportImage = viewport.AddComponent<Image>()!;
         viewportImage.color = Color.clear;
         viewportImage.raycastTarget = true;
 
-        var content = new GameObject("Content", typeof(RectTransform));
-        content.layer = Container.layer;
-        m_content = content.GetComponent<RectTransform>()!;
+        viewport.AddComponent<RectMask2D>();
+
+        var content = new GameObject("Content")
+        {
+            layer = m_container.layer
+        };
+
+        m_content = content.AddComponent<RectTransform>()!;
         m_content.SetParent(m_viewport, false);
         m_content.anchorMin = new Vector2(0.5f, 1f);
         m_content.anchorMax = new Vector2(0.5f, 1f);
@@ -75,23 +86,24 @@ public sealed class ArchiveMenuScreen : IDisposable
         m_content.anchoredPosition = Vector2.zero;
         m_content.sizeDelta = new Vector2(ArchiveMenuEntry.SLOT_WIDTH, 0f);
 
-        ScrollRect = scrollPane.GetComponent<ScrollRect>()!;
-        ScrollRect.horizontal = false;
-        ScrollRect.vertical = true;
-        ScrollRect.movementType = ScrollRect.MovementType.Clamped;
-        ScrollRect.scrollSensitivity = 80f;
-        ScrollRect.viewport = m_viewport;
-        ScrollRect.content = m_content;
-        ScrollRect.verticalNormalizedPosition = 1f;
+        m_scrollRect = scrollPane.AddComponent<ScrollRect>()!;
+        m_scrollRect.horizontal = false;
+        m_scrollRect.vertical = true;
+        m_scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        m_scrollRect.scrollSensitivity = 80f;
+        m_scrollRect.viewport = m_viewport;
+        m_scrollRect.content = m_content;
+        m_scrollRect.verticalNormalizedPosition = 1f;
 
-        m_driver = Container.AddComponent<ArchiveMenuScreenDriver>();
+        m_driver = m_container.AddComponent<ArchiveMenuScreenDriver>();
         m_driver.Initialize(this);
+
+        statusText = CreateStatusLabel(statusMessage);
     }
 
-    public Text AddStatusLabel(string text)
+    public Text CreateStatusLabel(string text)
     {
-        var canvas = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas")!;
-        var source = SfmUtil.GetChild(canvas, "OptionsMenuScreen/Content/GameOptions/GameOptionsButton/Menu Button Text")!;
+        var source = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas/OptionsMenuScreen/Content/GameOptions/GameOptionsButton/Menu Button Text")!;
         var label = UnityEngine.Object.Instantiate(source, m_content, false);
         label.name = "SFM-StatusLabel";
         label.SetActive(true);
@@ -100,10 +112,10 @@ public sealed class ArchiveMenuScreen : IDisposable
         SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(label);
         SfmUtil.RemoveComponent<FixVerticalAlign>(label);
 
-        m_statusText = label.GetComponent<Text>()!;
-        m_statusText.raycastTarget = false;
-        m_statusText.lineSpacing = 1f;
-        m_statusText.text = text;
+        var statusText = label.GetComponent<Text>()!;
+        statusText.raycastTarget = false;
+        statusText.lineSpacing = 1f;
+        statusText.text = text;
 
         var transform = label.GetComponent<RectTransform>()!;
         transform.anchorMin = new Vector2(0.5f, 1f);
@@ -113,7 +125,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         transform.sizeDelta = new Vector2(ArchiveMenuEntry.SLOT_WIDTH, ArchiveMenuEntry.SLOT_TOTAL_HEIGHT);
 
         UpdateLayout();
-        return m_statusText;
+        return statusText;
     }
 
     public void Add(ArchiveMenuEntry entry)
@@ -130,11 +142,19 @@ public sealed class ArchiveMenuScreen : IDisposable
         UpdateLayout();
     }
 
-    public void Show()
+    public IEnumerator Show()
     {
         UpdateLayout();
         EventSystem.current?.SetSelectedGameObject(null);
-        Container.SetActive(true);
+        m_container.SetActive(true);
+
+        yield return UIManager.instance.ShowMenu(m_menuScreen);
+    }
+
+    public IEnumerator Hide()
+    {
+        yield return UIManager.instance.HideMenu(m_menuScreen);
+        m_container.SetActive(false);
     }
 
     public void Dispose()
@@ -146,7 +166,7 @@ public sealed class ArchiveMenuScreen : IDisposable
 
         m_disposed = true;
         m_backButton.OnSubmitPressed.RemoveAllListeners();
-        UnityEngine.Object.Destroy(Container);
+        UnityEngine.Object.Destroy(m_container);
     }
 
     internal void KeepSelectionVisible()
@@ -186,7 +206,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         }
     }
 
-    private void UpdateLayout()
+    public void UpdateLayout()
     {
         for (int i = 0; i < m_entries.Count; i++)
         {
@@ -197,18 +217,18 @@ public sealed class ArchiveMenuScreen : IDisposable
             transform.anchoredPosition = new Vector2(0f, -(i + 1) * ArchiveMenuEntry.SLOT_TOTAL_HEIGHT);
         }
 
-        float rowCount = m_entries.Count + (m_statusText != null ? 1 : 0);
+        float rowCount = m_entries.Count + 1; // +1 for the status label
         m_content.sizeDelta = new Vector2(ArchiveMenuEntry.SLOT_WIDTH, rowCount * ArchiveMenuEntry.SLOT_TOTAL_HEIGHT);
 
         RebuildNavigation();
         Canvas.ForceUpdateCanvases();
     }
 
-    private void RebuildNavigation()
+    public void RebuildNavigation()
     {
         if (m_entries.Count == 0)
         {
-            MenuScreen.defaultHighlight = m_backButton;
+            m_menuScreen.defaultHighlight = m_backButton;
             var onlyBack = m_backButton.navigation;
             onlyBack.mode = Navigation.Mode.Explicit;
             onlyBack.selectOnUp = m_backButton;
@@ -234,10 +254,10 @@ public sealed class ArchiveMenuScreen : IDisposable
         backNavigation.selectOnUp = m_entries[m_entries.Count - 1].MenuButton;
         backNavigation.selectOnDown = m_entries[0].MenuButton;
         m_backButton.navigation = backNavigation;
-        MenuScreen.defaultHighlight = m_entries[0].MenuButton;
+        m_menuScreen.defaultHighlight = m_entries[0].MenuButton;
     }
 
-    private static void FitToParent(RectTransform transform)
+    public static void FitToParent(RectTransform transform)
     {
         transform.anchorMin = Vector2.zero;
         transform.anchorMax = Vector2.one;
@@ -249,7 +269,7 @@ public sealed class ArchiveMenuScreen : IDisposable
 
 public sealed class ArchiveMenuScreenDriver : MonoBehaviour
 {
-    private ArchiveMenuScreen? m_screen;
+    public ArchiveMenuScreen? m_screen;
 
     public void Initialize(ArchiveMenuScreen screen)
     {
