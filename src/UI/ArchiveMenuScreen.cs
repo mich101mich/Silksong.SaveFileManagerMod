@@ -15,6 +15,7 @@ public sealed class ArchiveMenuScreen : IDisposable
     public ScrollRect m_scrollRect;
     public RectTransform m_content;
     public RectTransform m_viewport;
+    public Slider m_verticalSlider;
     public MenuButton m_backButton;
     public List<ArchiveMenuEntry> m_entries = new List<ArchiveMenuEntry>();
     public ArchiveMenuScreenDriver m_driver;
@@ -95,6 +96,10 @@ public sealed class ArchiveMenuScreen : IDisposable
         m_scrollRect.content = m_content;
         m_scrollRect.verticalNormalizedPosition = 1f;
 
+        m_verticalSlider = CreateVerticalSlider(scrollTransform);
+        m_verticalSlider.onValueChanged.AddListener(UpdateScrollRectFromSlider);
+        m_scrollRect.onValueChanged.AddListener(UpdateSliderFromScrollRect);
+
         m_driver = m_container.AddComponent<ArchiveMenuScreenDriver>();
         m_driver.Initialize(this);
 
@@ -165,8 +170,35 @@ public sealed class ArchiveMenuScreen : IDisposable
         }
 
         m_disposed = true;
+        m_verticalSlider.onValueChanged.RemoveListener(UpdateScrollRectFromSlider);
+        m_scrollRect.onValueChanged.RemoveListener(UpdateSliderFromScrollRect);
         m_backButton.OnSubmitPressed.RemoveAllListeners();
         UnityEngine.Object.Destroy(m_container);
+    }
+
+    public void UpdateScrollbarVisibility()
+    {
+        bool shouldShow = m_scrollRect.vertical && m_content.rect.height > m_viewport.rect.height + 0.01f;
+        if (m_verticalSlider.gameObject.activeSelf != shouldShow)
+        {
+            m_verticalSlider.gameObject.SetActive(shouldShow);
+        }
+    }
+
+    public void UpdateSliderFromScrollRect(Vector2 position)
+    {
+        if (!Mathf.Approximately(m_verticalSlider.normalizedValue, position.y))
+        {
+            m_verticalSlider.SetValueWithoutNotify(position.y);
+        }
+    }
+
+    public void UpdateScrollRectFromSlider(float value)
+    {
+        if (!Mathf.Approximately(m_scrollRect.verticalNormalizedPosition, value))
+        {
+            m_scrollRect.verticalNormalizedPosition = value;
+        }
     }
 
     internal void KeepSelectionVisible()
@@ -265,6 +297,54 @@ public sealed class ArchiveMenuScreen : IDisposable
         transform.anchoredPosition = Vector2.zero;
         transform.sizeDelta = Vector2.zero;
     }
+
+    public static Slider CreateVerticalSlider(RectTransform scrollTransform)
+    {
+        var source = SfmUtil.GetChild(UIManager.instance.achievementsMenuScreen.gameObject, "Content/Scrollbar")!;
+        var sliderObject = UnityEngine.Object.Instantiate(source, scrollTransform, false);
+        sliderObject.name = "Scrollbar";
+
+        var sliderTransform = sliderObject.GetComponent<RectTransform>()!;
+        sliderTransform.anchorMin = new Vector2(1f, 0f);
+        sliderTransform.anchorMax = new Vector2(1f, 1f);
+        sliderTransform.pivot = new Vector2(0f, 0.5f);
+        sliderTransform.anchoredPosition = new Vector2(0f, 0f);
+        sliderTransform.sizeDelta = new Vector2(50f, 0f);
+
+        var background = SfmUtil.GetChildComponent<RectTransform>(sliderObject, "Background")!;
+        background.anchorMin = new Vector2(background.anchorMin.x, 0f);
+        background.anchorMax = new Vector2(background.anchorMax.x, 1f);
+        background.anchoredPosition = new Vector2(background.anchoredPosition.x, 0f);
+        background.sizeDelta = new Vector2(background.sizeDelta.x, 0f);
+
+        var slidingArea = SfmUtil.GetChildComponent<RectTransform>(sliderObject, "Sliding Area")!;
+        FitToParent(slidingArea);
+        slidingArea.sizeDelta = new Vector2(0f, -150f);
+
+        var originalHandle = SfmUtil.GetChild(sliderObject, "Sliding Area/Handle")!;
+        var handle = SfmUtil.GetChild(originalHandle, "TopFleur")!;
+        SfmUtil.RemoveComponentImmediate<ScrollBarHandle>(handle);
+
+        var handleTransform = handle.GetComponent<RectTransform>()!;
+        handleTransform.SetParentReset(slidingArea);
+        handleTransform.anchorMin = new Vector2(0f, 0.5f);
+        handleTransform.anchorMax = new Vector2(1f, 0.5f);
+        handleTransform.pivot = new Vector2(0.5f, 0.5f);
+        handleTransform.anchoredPosition = Vector2.zero;
+        handleTransform.sizeDelta = new Vector2(0f, 140f);
+        handle.name = "Handle";
+
+        UnityEngine.Object.DestroyImmediate(originalHandle);
+        UnityEngine.Object.DestroyImmediate(sliderObject.GetComponent<Scrollbar>());
+
+        var slider = sliderObject.AddComponent<Slider>();
+        slider.handleRect = handleTransform;
+        slider.direction = Slider.Direction.BottomToTop;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.SetValueWithoutNotify(1f);
+        return slider;
+    }
 }
 
 public sealed class ArchiveMenuScreenDriver : MonoBehaviour
@@ -279,5 +359,6 @@ public sealed class ArchiveMenuScreenDriver : MonoBehaviour
     public void LateUpdate()
     {
         m_screen?.KeepSelectionVisible();
+        m_screen?.UpdateScrollbarVisibility();
     }
 }
