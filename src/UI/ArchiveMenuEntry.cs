@@ -1,18 +1,15 @@
 using System;
-using System.Collections;
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using Silksong.ModMenu.Elements;
 using TeamCherry.Localization;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public partial class ArchiveMenuEntry : TextButton
+public partial class ArchiveMenuEntry : IDisposable
 {
-    public static readonly float SLOT_TEXT_HEIGHT = SpacingConstants.VSPACE_SMALL;
+    public static readonly float SLOT_TEXT_HEIGHT = 70f;
     public static readonly float SLOT_PREVIEW_HEIGHT = 140f;
     public static readonly float SLOT_TOTAL_HEIGHT = SLOT_TEXT_HEIGHT + SLOT_PREVIEW_HEIGHT;
 
@@ -21,10 +18,28 @@ public partial class ArchiveMenuEntry : TextButton
     public SaveProfileHealthBar? m_healthSlots;
     public SaveProfileSilkBar? m_silkBar;
 
+    public readonly GameObject Container;
+    public readonly MenuButton MenuButton;
+    public readonly Text ButtonText;
+    public readonly Text DescriptionText;
+
+    public Action? OnSubmit;
+
+    private bool m_disposed;
+
     public ArchiveMenuEntry(int slotIndex, SaveStats? stats, string? message, SaveSlotButton template)
-        : base(Init(slotIndex, stats, message), message ?? "")
     {
-        base.Container.name = $"SFM-ArchiveSaveSlot";
+        Container = CreateContainer(out var menuButton, out var buttonText, out var descriptionText);
+        MenuButton = menuButton;
+        ButtonText = buttonText;
+        DescriptionText = descriptionText;
+
+        ButtonText.text = Init(slotIndex, stats, message);
+        DescriptionText.text = message ?? "";
+        MenuButton.OnSubmitPressed = new UnityEvent();
+        MenuButton.OnSubmitPressed.AddListener(() => OnSubmit?.Invoke());
+
+        Container.name = "SFM-ArchiveSaveSlot";
 
         // Layout:
         // +-------------------------------------------------------------------------------+ ---
@@ -34,13 +49,13 @@ public partial class ArchiveMenuEntry : TextButton
         // |     [     ]                         S 800     The Abyss                       |  |
         // +-------------------------------------------------------------------------------+ ---
 
-        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
+        Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
-        var textButton = SfmUtil.GetChild(base.Container, "TextButton")!;
+        var textButton = SfmUtil.GetChild(Container, "TextButton")!;
         textButton.name = "SFM-ArchiveSaveSlot-Inner";
         textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
 
-        var nameText = base.ButtonText.gameObject;
+        var nameText = ButtonText.gameObject;
         nameText.name = "SFM-SaveSlotName";
 
         SfmUtil.RemoveComponent<ContentSizeFitter>(nameText);
@@ -53,9 +68,9 @@ public partial class ArchiveMenuEntry : TextButton
         nameTransform.anchoredPosition = new Vector2(0f, 0f);
         nameTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TEXT_HEIGHT);
 
-        base.ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
+        ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
 
-        var preview = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
+        var preview = DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
         preview.name = "SFM-SaveSlotPreview";
 
         if (message != null || stats == null)
@@ -74,6 +89,53 @@ public partial class ArchiveMenuEntry : TextButton
         previewTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_PREVIEW_HEIGHT);
 
         CloneSaveSlotElements(preview, slotIndex, stats, template);
+    }
+
+    public void Dispose()
+    {
+        if (m_disposed)
+        {
+            return;
+        }
+
+        m_disposed = true;
+        MenuButton.OnSubmitPressed.RemoveAllListeners();
+        UnityEngine.Object.Destroy(Container);
+    }
+
+    private static GameObject CreateContainer(out MenuButton menuButton, out Text buttonText, out Text descriptionText)
+    {
+        var canvas = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas")!;
+        var source = SfmUtil.GetChild(canvas, "OptionsMenuScreen/Content/GameOptions")!;
+        var container = UnityEngine.Object.Instantiate(source, source.transform.parent, false);
+        container.SetActive(false);
+
+        var button = SfmUtil.GetChild(container, "GameOptionsButton")!;
+        button.name = "TextButton";
+        SfmUtil.RemoveComponent<AutoLocalizeTextUI>(button);
+
+        var textObject = SfmUtil.GetChild(button, "Menu Button Text")!;
+        SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(textObject);
+        buttonText = textObject.GetComponent<Text>()!;
+
+        var descriptionSource = SfmUtil.GetChild(canvas, "GameOptionsMenuScreen/Content/CamShakeSetting/CamShakePopupOption/Description")!;
+        var description = UnityEngine.Object.Instantiate(descriptionSource, button.transform, false);
+        description.name = "Description";
+        SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(description);
+        descriptionText = description.GetComponent<Text>()!;
+        descriptionText.alignment = TextAnchor.MiddleCenter;
+
+        var descriptionTransform = description.GetComponent<RectTransform>()!;
+        descriptionTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        descriptionTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        descriptionTransform.pivot = new Vector2(0.5f, 0.5f);
+
+        menuButton = button.GetComponent<MenuButton>()!;
+        menuButton.buttonType = MenuButton.MenuButtonType.Activate;
+        menuButton.descriptionText = description.GetComponent<Animator>()!;
+
+        container.SetActive(true);
+        return container;
     }
 
     public static string Init(int slotIndex, SaveStats? stats, string? message)

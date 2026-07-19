@@ -1,10 +1,5 @@
-using Silksong.ModMenu.Elements;
-using Silksong.ModMenu.Screens;
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +7,7 @@ namespace SaveFileManagerMod.UI;
 
 public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 {
-    public ScrollingMenuScreen? m_screen;
+    public ArchiveMenuScreen? m_screen;
 
     public int m_selectedSlotIndex = -1;
     public bool m_selectedSlotIsEmpty = false;
@@ -20,14 +15,20 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
     public bool IsOpen = false;
 
     public Coroutine? m_openRoutine = null;
+    public Coroutine? m_closeRoutine = null;
 
     public List<ArchiveMenuEntry?> m_rawEntries = new List<ArchiveMenuEntry?>();
     public int m_numFilledEntries = 0;
 
     public SaveSlotButton m_templateSlotButton = null!;
 
+    private readonly bool[] m_entryReady = new bool[51];
+    private int m_openGeneration = 0;
+    private bool m_isClosing = false;
+
     public void OnDestroy()
     {
+        m_openGeneration++;
         if (m_screen != null)
         {
             m_screen.Dispose();
@@ -47,18 +48,28 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         m_selectedSlotIndex = slot.SaveSlotIndex;
         m_selectedSlotIsEmpty = slot.saveFileState == SaveSlotButton.SaveFileStates.Empty;
         m_templateSlotButton = slot;
+        IsOpen = true;
+        m_isClosing = false;
 
-        m_openRoutine = StartCoroutine(OpenRoutine());
+        int generation = ++m_openGeneration;
+        m_openRoutine = StartCoroutine(OpenRoutine(generation));
     }
 
     public void Close()
     {
+        if (!IsOpen || m_isClosing)
+        {
+            return;
+        }
+
+        m_isClosing = true;
+        m_openGeneration++;
         if (m_openRoutine != null)
         {
             StopCoroutine(m_openRoutine);
             m_openRoutine = null;
         }
-        StartCoroutine(CloseRoutine());
+        m_closeRoutine = StartCoroutine(CloseRoutine());
     }
 
     public void Update()
@@ -77,10 +88,8 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         }
     }
 
-    public IEnumerator OpenRoutine()
+    public IEnumerator OpenRoutine(int generation)
     {
-        IsOpen = true;
-
         // Prevent input (mostly cancelling) until the menu is open.
         // Input will be resumed by ui.ShowMenu();
         GameManager.instance.inputHandler.StopUIInput();
@@ -91,34 +100,33 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             ? Strings.TitleLoadIntoEmpty // "Load from archive"
             : Strings.TitleArchiveSwap; // "Archive / Swap"
 
-        m_screen = new ScrollingMenuScreen(title);
-        m_screen.Container.name = "SFM-ArchiveSlotSelectionMenu";
-        m_screen.AllowGoBack = false;
-        m_screen.OnGoBack += Close;
-        m_screen.Content.VerticalSpacing = ArchiveMenuEntry.SLOT_TOTAL_HEIGHT;
+        m_screen = new ArchiveMenuScreen(title, Close);
 
         var slotInfo = SaveName.TryGetSlotName(m_selectedSlotIndex, out string slotName)
             ? Strings.NamedSlotInfo(name: slotName, index: m_selectedSlotIndex) // $"Target: Slot {index}. \"{name}\""
             : Strings.UnnamedSlotInfo(index: m_selectedSlotIndex); // $"Target: Slot {index}."
 
-        var statusLabel = new TextLabel("SFM-StatusLabel");
-
-        // By default, text has a component that changes the line spacing to -0.33f, which is bad for multiline strings.
-        SfmUtil.RemoveComponent<FixVerticalAlign>(statusLabel.Text.gameObject);
-
-        statusLabel.Text.lineSpacing = 1f;
-        statusLabel.Text.text = $"{slotInfo}\n{Strings.LoadingText}"; // "Loading save slots..."
-        m_screen.Add(statusLabel);
+        var statusText = m_screen.AddStatusLabel($"{slotInfo}\n{Strings.LoadingText}"); // "Loading save slots..."
 
         m_rawEntries.Clear();
-        m_rawEntries.Add(null); // index 0 is unused
+        m_entryReady[0] = true;
+        for (int i = 0; i <= 50; i++)
+        {
+            m_rawEntries.Add(null);
+            m_entryReady[i] = i == 0;
+        }
+        m_numFilledEntries = 0;
 
         // Add the first entries immediately so that there is something to select
         for (int i = 1; i <= 4; i++)
         {
-            AddEntry(i);
+            AddEntry(i, generation);
         }
-        yield return new WaitUntil(() => m_rawEntries.Count == 5);
+        yield return new WaitUntil(() => generation != m_openGeneration || FirstEntriesReady());
+        if (generation != m_openGeneration)
+        {
+            yield break;
+        }
         for (int i = 1; i <= 4; i++)
         {
             if (m_rawEntries[i] is ArchiveMenuEntry entry)
@@ -134,14 +142,23 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
             yield return StartCoroutine(ui.HideSaveProfileMenu(updateBlackThread: true));
         }
 
-        InvokeScreenOnShow(m_screen);
+        if (generation != m_openGeneration)
+        {
+            yield break;
+        }
 
+        m_screen.Show();
         yield return StartCoroutine(ui.ShowMenu(m_screen.MenuScreen));
 
         for (int i = 5; i <= 50; i++)
         {
-            AddEntry(i);
-            yield return new WaitUntil(() => m_rawEntries.Count > i);
+            AddEntry(i, generation);
+            int pendingSlot = i;
+            yield return new WaitUntil(() => generation != m_openGeneration || m_entryReady[pendingSlot]);
+            if (generation != m_openGeneration)
+            {
+                yield break;
+            }
             if (m_rawEntries[i] is ArchiveMenuEntry entry)
             {
                 m_screen.Add(entry);
@@ -152,33 +169,39 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         if (m_numFilledEntries == 0)
         {
-            statusLabel.Text.text = $"{slotInfo}\n{Strings.NoLoadableSavesFound}"; // "No loadable saves found"
+            statusText.text = $"{slotInfo}\n{Strings.NoLoadableSavesFound}"; // "No loadable saves found"
         }
         else
         {
-            statusLabel.Text.text = $"{slotInfo}";
+            statusText.text = $"{slotInfo}";
         }
+        m_openRoutine = null;
     }
 
-    public void AddEntry(int slotIndex)
+    public void AddEntry(int slotIndex, int generation)
     {
         if (slotIndex == m_selectedSlotIndex)
         {
-            m_rawEntries.Add(null);
+            m_entryReady[slotIndex] = true;
             return;
         }
 
         GameManager.instance.GetSaveStatsForSlot(slotIndex,
-            (stats, message) => OnSaveStatsReceived(slotIndex, stats, message));
+            (stats, message) => OnSaveStatsReceived(generation, slotIndex, stats, message));
     }
 
-    public void OnSaveStatsReceived(int slotIndex, SaveStats? stats, string? message)
+    public void OnSaveStatsReceived(int generation, int slotIndex, SaveStats? stats, string? message)
     {
+        if (generation != m_openGeneration)
+        {
+            return;
+        }
+
         bool isEmpty = stats == null && message == null;
         if (isEmpty && m_selectedSlotIsEmpty)
         {
             // Can't load from an empty slot => don't add it to the list
-            m_rawEntries.Add(null);
+            m_entryReady[slotIndex] = true;
             return;
         }
 
@@ -205,7 +228,8 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         // Don't add the entry immediately, because that causes visual glitches.
         // Only modify UI from the routine.
-        m_rawEntries.Add(entry);
+        m_rawEntries[slotIndex] = entry;
+        m_entryReady[slotIndex] = true;
         m_numFilledEntries++;
     }
 
@@ -219,9 +243,10 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
         if (m_screen != null)
         {
-            yield return StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
-
-            InvokeScreenOnHide(m_screen);
+            if (m_screen.Container.activeSelf)
+            {
+                yield return StartCoroutine(ui.HideMenu(m_screen.MenuScreen));
+            }
 
             m_screen.Dispose();
             m_screen = null;
@@ -229,21 +254,10 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
         IsOpen = false;
 
         yield return StartCoroutine(ui.GoToProfileMenu());
+        m_isClosing = false;
+        m_closeRoutine = null;
     }
 
-    public static readonly MethodInfo s_invokeOnShow = typeof(AbstractMenuScreen)
-        .GetMethod("InvokeOnShow", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    public static readonly MethodInfo s_invokeOnHide = typeof(AbstractMenuScreen)
-        .GetMethod("InvokeOnHide", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    public static void InvokeScreenOnShow(AbstractMenuScreen screen)
-    {
-        s_invokeOnShow.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Forwards });
-    }
-
-    public static void InvokeScreenOnHide(AbstractMenuScreen screen)
-    {
-        s_invokeOnHide.Invoke(screen, new object[] { MenuScreenNavigation.NavigationType.Backwards });
-    }
+    private bool FirstEntriesReady() =>
+        m_entryReady[1] && m_entryReady[2] && m_entryReady[3] && m_entryReady[4];
 }
