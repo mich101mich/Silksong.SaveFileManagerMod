@@ -29,6 +29,7 @@ permissions:
   attestations: write
 
 jobs:
+  # Check that all language files are valid and contain the same keys
   localization-check:
     runs-on: ubuntu-latest
 
@@ -37,14 +38,10 @@ jobs:
       - name: Check language files
         run: python3 scripts/check_language_files.py
 
+  # Build the mod and create artifacts for publishing
   build:
-    needs: localization-check
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      attestation-url: ${{ steps.attest.outputs.attestation-url }}
-      allow-release: "true"
-      is-new-version: ${{ !fromJSON(steps.needs-release.outputs.exists || 'true') }}
       thunderstore-artifact-id: ${{ steps.thunderstore-artifact.outputs.artifact-id }}
       nuget-artifact-id: ${{ steps.nuget-artifact.outputs.artifact-id }}
 
@@ -58,12 +55,6 @@ jobs:
         run: dotnet build -c Release --verbosity normal
       - name: Pack
         run: dotnet pack -o nuget/
-      - name: Get Version
-        id: version
-        run: |-
-          VERSION=$(dotnet build SaveFileManagerMod.csproj -getProperty:Version)
-          echo Version is $VERSION
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Upload thunderstore artifact
         id: thunderstore-artifact
         uses: actions/upload-artifact@v7
@@ -76,49 +67,64 @@ jobs:
         with:
           path: nuget/*.nupkg
           archive: false
+
+  # Get the version from the project file and check if it is a new version
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is-new-version: ${{ !fromJSON(steps.needs-release.outputs.exists || 'true') }}
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
+      - name: Get Version
+        id: version
+        run: |-
+          VERSION=$(dotnet build SaveFileManagerMod.csproj -getProperty:Version)
+          echo Version is $VERSION
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Check if release needed
         id: needs-release
         uses: mukunku/tag-exists-action@v1.7.0
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
         with:
           tag: v${{ steps.version.outputs.version }}
       - name: Ensure PR version is new
         if: github.event_name == 'pull_request' && steps.needs-release.outputs.exists == 'true'
         run: |
-          echo "Version v${{ steps.version.outputs.version }} already exists. Update the version before merging this PR."
+          echo "::error file=Directory.Build.props,line=14::Version ${{ steps.version.outputs.version }} already exists. Please update the version in Directory.Build.props to a new version."
           exit 1
-      - name: Generate attestation
-        id: attest
-        uses: actions/attest@v4
-        if: github.event_name == 'push' && steps.needs-release.outputs.exists == 'false'
-        with:
-          subject-path: |
-            thunderstore/dist/*.zip
-            nuget/*.nupkg
 
-  # Publish to Thunderstore to that users can install it
+  # Check which secrets are set
+  secret-check:
+    runs-on: ubuntu-latest
+    outputs:
+      has-nuget-secret: ${{ secrets.NUGET_API_KEY != '' }}
+      has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
+      has-nexus-secret: ${{ secrets.NEXUSMODS_API_KEY != '' && vars.NEXUSMODS_FILE_ID != '' }}
+    steps:
+      - run: |
+          [[ -n "${{ secrets.NUGET_API_KEY }}" ]] && echo "NUGET_API_KEY is set" || echo "NUGET_API_KEY is not set"
+          [[ -n "${{ secrets.THUNDERSTORE_API_KEY }}" ]] && echo "THUNDERSTORE_API_KEY is set" || echo "THUNDERSTORE_API_KEY is not set"
+          [[ -n "${{ secrets.NEXUSMODS_API_KEY }}" ]] && echo "NEXUSMODS_API_KEY is set" || echo "NEXUSMODS_API_KEY is not set"
+          [[ -n "${{ vars.NEXUSMODS_FILE_ID }}" ]] && echo "NEXUSMODS_FILE_ID is set" || echo "NEXUSMODS_FILE_ID is not set"
+
+  # Publish to https://thunderstore.io/c/hollow-knight-silksong
   release-thunderstore:
     needs:
+      - localization-check
       - build
+      - get-version
       - secret-check
     runs-on: ubuntu-latest
-    # thunderstore doesn't support prerelease versions in semver so if it was used we need to skip publishing
     if: |
-      needs.secret-check.outputs.has-thunderstore-secret == 'true' &&
-      !contains(needs.build.outputs.version, '-') &&
-      (
-        (
-          github.event_name == 'push' &&
-          needs.build.outputs.allow-release == 'true' &&
-          needs.build.outputs.is-new-version == 'true'
-        ) ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.force_thunderstore == 'true'
-        )
+      needs.secret-check.outputs.has-thunderstore-secret == 'true' && (
+        (github.event_name == 'push' && needs.get-version.outputs.is-new-version == 'true') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.force_thunderstore == 'true')
       )
-    # Do not substitute your Thunderstore API key in this workflow! Instead, add a secret to your repository.
-    # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
     env:
       THUNDERSTORE_API_KEY: ${{ secrets.THUNDERSTORE_API_KEY }}
 
@@ -143,24 +149,18 @@ jobs:
             --file thunderstore/dist/*.zip \
             --token $THUNDERSTORE_API_KEY
 
-  # Publish to Nexus Mods so that users can install the mod there
+  # Publish to https://nexusmods.com/games/hollowknightsilksong/
   release-nexus:
     needs:
+      - localization-check
       - build
+      - get-version
       - secret-check
     runs-on: ubuntu-latest
     if: |
-      needs.secret-check.outputs.has-nexus-secret == 'true' &&
-      (
-        (
-          github.event_name == 'push' &&
-          needs.build.outputs.allow-release == 'true' &&
-          needs.build.outputs.is-new-version == 'true'
-        ) ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.force_nexus == 'true'
-        )
+      needs.secret-check.outputs.has-nexus-secret == 'true' && (
+        (github.event_name == 'push' && needs.get-version.outputs.is-new-version == 'true') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.force_nexus == 'true')
       )
     env:
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
@@ -178,8 +178,8 @@ jobs:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ vars.NEXUSMODS_FILE_ID }}
           filename: thunderstore/dist/*.zip
-          version: ${{ needs.build.outputs.version }}
-          display_name: SaveFileManagerMod ${{ needs.build.outputs.version }}
+          version: ${{ needs.get-version.outputs.version }}
+          display_name: SaveFileManagerMod ${{ needs.get-version.outputs.version }}
           category: main
           archive_existing_version: true
           primary_mod_manager_download: true
@@ -189,24 +189,16 @@ jobs:
   # Publish to NuGet so that other mods can depend on it in CI
   release-nuget:
     needs:
+      - localization-check
       - build
+      - get-version
       - secret-check
     runs-on: ubuntu-latest
     if: |
-      needs.secret-check.outputs.has-nuget-secret == 'true' && 
-      (
-        (
-          github.event_name == 'push' && 
-          needs.build.outputs.allow-release == 'true' && 
-          needs.build.outputs.is-new-version == 'true'
-        ) ||
-        (
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.force_nuget == 'true'
-        )
+      needs.secret-check.outputs.has-nuget-secret == 'true' && (
+        (github.event_name == 'push' && needs.get-version.outputs.is-new-version == 'true') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.force_nuget == 'true')
       )
-    # Do not substitute your NuGet API key in this workflow! Instead, add a secret to your repository
-    # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
     env:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
@@ -230,9 +222,12 @@ jobs:
   # but is also nice for multiple other reasons such as auto-tagging *after* a build success)
   release-github:
     needs:
+      - localization-check
       - build
+      - get-version
+      - secret-check
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && needs.build.outputs.allow-release == 'true' && needs.build.outputs.is-new-version == 'true'
+    if: github.event_name == 'push' && needs.get-version.outputs.is-new-version == 'true'
 
     steps:
       - name: Download artifact
@@ -241,27 +236,26 @@ jobs:
           artifact-ids: ${{ needs.build.outputs.thunderstore-artifact-id }}
           path: thunderstore/dist
           skip-decompress: true
+      - name: Download NuGet artifact
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.build.outputs.nuget-artifact-id }}
+          path: nuget/
+      - name: Generate attestation
+        id: attest
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            thunderstore/dist/*.zip
+            nuget/*.nupkg
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
           draft: false
           generate_release_notes: true
           fail_on_unmatched_files: true
-          tag_name: v${{ needs.build.outputs.version }}
+          tag_name: v${{ needs.get-version.outputs.version }}
           body: |
-            Build attested at ${{ needs.build.outputs.attestation-url }}
+            Build attested at ${{ steps.attest.outputs.attestation-url }}
           files: |
             thunderstore/dist/*.zip
-
-  secret-check:
-    runs-on: ubuntu-latest
-    outputs:
-      has-nuget-secret: ${{ secrets.NUGET_API_KEY != '' }}
-      has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
-      has-nexus-secret: ${{ secrets.NEXUSMODS_API_KEY != '' && vars.NEXUSMODS_FILE_ID != '' }}
-    steps:
-      - run: |
-          [[ -n "${{ secrets.NUGET_API_KEY }}" ]] && echo "NUGET_API_KEY is set" || echo "NUGET_API_KEY is not set"
-          [[ -n "${{ secrets.THUNDERSTORE_API_KEY }}" ]] && echo "THUNDERSTORE_API_KEY is set" || echo "THUNDERSTORE_API_KEY is not set"
-          [[ -n "${{ secrets.NEXUSMODS_API_KEY }}" ]] && echo "NEXUSMODS_API_KEY is set" || echo "NEXUSMODS_API_KEY is not set"
-          [[ -n "${{ vars.NEXUSMODS_FILE_ID }}" ]] && echo "NEXUSMODS_FILE_ID is set" || echo "NEXUSMODS_FILE_ID is not set"
