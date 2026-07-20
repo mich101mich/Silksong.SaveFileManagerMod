@@ -18,6 +18,7 @@ public sealed class ArchiveMenuScreen : IDisposable
     public RectTransform m_viewport;
     public Slider m_verticalSlider;
     public MenuButton m_backButton;
+    public Coroutine? m_scrollRoutine;
     public List<ArchiveMenuEntry> m_entries = new List<ArchiveMenuEntry>();
     public bool m_disposed;
 
@@ -148,7 +149,27 @@ public sealed class ArchiveMenuScreen : IDisposable
         entry.Container.transform.SetParent(m_content, false);
         entry.Container.SetActive(true);
 
-        entry.MenuButton.OnSelected += (_) => ScrollIntoView(entry);
+        var onSelectListener = new EventTrigger.Entry();
+        onSelectListener.eventID = EventTriggerType.Select;
+        onSelectListener.callback.AddListener((data) =>
+        {
+            if (data is not AxisEventData)
+            {
+                return;
+            }
+
+            // Keyboard/controller navigation: Scroll the entry into view
+            var ui = UIManager.instance;
+            if (m_scrollRoutine != null)
+            {
+                ui.StopCoroutine(m_scrollRoutine);
+                m_scrollRoutine = null;
+            }
+            m_scrollRoutine = ui.StartCoroutine(ScrollIntoView(entry));
+        });
+
+        var eventTrigger = entry.MenuButton.gameObject.GetComponent<EventTrigger>()!;
+        eventTrigger.triggers.Add(onSelectListener);
 
         UpdateLayout();
     }
@@ -176,19 +197,37 @@ public sealed class ArchiveMenuScreen : IDisposable
         }
 
         m_disposed = true;
+
+        if (m_scrollRoutine != null)
+        {
+            UIManager.instance.StopCoroutine(m_scrollRoutine);
+            m_scrollRoutine = null;
+        }
+
         UnityEngine.Object.Destroy(m_container);
     }
 
-    public void ScrollIntoView(ArchiveMenuEntry entry)
+    public static readonly float SCROLL_TIME_SECONDS = 0.2f;
+    public IEnumerator ScrollIntoView(ArchiveMenuEntry entry)
     {
-        var viewportSize = m_scrollRect.viewport.rect.size;
-        var contentSize = m_scrollRect.content.rect.size;
+        float startY = m_scrollRect.verticalNormalizedPosition;
+        for (float time = 0f; time < SCROLL_TIME_SECONDS; time += Time.unscaledDeltaTime)
+        {
+            // Since more elements might be added while we scroll, we will need to recalculate the scroll position each time
+            var viewportSize = m_scrollRect.viewport.rect.size;
+            var contentSize = m_scrollRect.content.rect.size;
 
-        float targetY = m_scrollRect.content.InverseTransformPoint(entry.Container.transform.position).y + contentSize.y;
+            float targetY = m_scrollRect.content.InverseTransformPoint(entry.Container.transform.position).y + contentSize.y;
 
-        float rawScrollY = (targetY - viewportSize.y * 0.5f) / (contentSize.y - viewportSize.y);
+            float rawScrollY = (targetY - viewportSize.y * 0.5f) / (contentSize.y - viewportSize.y);
 
-        m_scrollRect.verticalNormalizedPosition = Math.Clamp(rawScrollY, 0, 1);
+            var scrollY = Mathf.Clamp01(rawScrollY);
+
+            scrollY = Mathf.Lerp(startY, scrollY, time / SCROLL_TIME_SECONDS);
+
+            m_scrollRect.verticalNormalizedPosition = scrollY;
+            yield return null;
+        }
     }
 
     public void UpdateLayout()
