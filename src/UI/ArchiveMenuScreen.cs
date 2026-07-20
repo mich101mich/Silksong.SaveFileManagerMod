@@ -69,6 +69,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         m_viewport.SetParent(scrollTransform, false);
         FitToParent(m_viewport);
 
+        // Add a transparent image to the viewport so that it can receive mouse events etc.
         var viewportImage = viewport.AddComponent<Image>()!;
         viewportImage.color = Color.clear;
         viewportImage.raycastTarget = true;
@@ -117,7 +118,6 @@ public sealed class ArchiveMenuScreen : IDisposable
         label.name = "SFM-StatusLabel";
         label.SetActive(true);
 
-        SfmUtil.RemoveComponent<AutoLocalizeTextUI>(label);
         SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(label);
         SfmUtil.RemoveComponent<FixVerticalAlign>(label);
 
@@ -171,8 +171,17 @@ public sealed class ArchiveMenuScreen : IDisposable
             UIManager.instance.inputModule.focusOnMouseHover = false;
         });
 
-        var eventTrigger = entry.MenuButton.gameObject.GetComponent<EventTrigger>()!;
+        var onScrollListener = new EventTrigger.Entry();
+        onScrollListener.eventID = EventTriggerType.Scroll;
+        onScrollListener.callback.AddListener((data) =>
+        {
+            // Send the event to the scroll rect, because having an EventTrigger intercepts all events and stops propagation
+            ExecuteEvents.ExecuteHierarchy(m_scrollRect.gameObject, (PointerEventData)data, ExecuteEvents.scrollHandler);
+        });
+
+        var eventTrigger = entry.MenuButton.gameObject.AddComponent<EventTrigger>()!;
         eventTrigger.triggers.Add(onSelectListener);
+        eventTrigger.triggers.Add(onScrollListener);
 
         UpdateLayout();
     }
