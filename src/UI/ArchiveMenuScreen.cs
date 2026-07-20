@@ -166,6 +166,9 @@ public sealed class ArchiveMenuScreen : IDisposable
                 m_scrollRoutine = null;
             }
             m_scrollRoutine = ui.StartCoroutine(ScrollIntoView(entry));
+
+            // Also prevent cursor select so that we don't get weird double selections
+            UIManager.instance.inputModule.focusOnMouseHover = false;
         });
 
         var eventTrigger = entry.MenuButton.gameObject.GetComponent<EventTrigger>()!;
@@ -202,6 +205,7 @@ public sealed class ArchiveMenuScreen : IDisposable
         {
             UIManager.instance.StopCoroutine(m_scrollRoutine);
             m_scrollRoutine = null;
+            UIManager.instance.inputModule.focusOnMouseHover = true;
         }
 
         UnityEngine.Object.Destroy(m_container);
@@ -228,6 +232,8 @@ public sealed class ArchiveMenuScreen : IDisposable
             m_scrollRect.verticalNormalizedPosition = scrollY;
             yield return null;
         }
+
+        UIManager.instance.inputModule.focusOnMouseHover = true;
     }
 
     public void UpdateLayout()
