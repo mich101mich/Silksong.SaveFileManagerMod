@@ -79,9 +79,14 @@ jobs:
       - name: Check if release needed
         id: needs-release
         uses: mukunku/tag-exists-action@v1.7.0
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         with:
           tag: v${{ steps.version.outputs.version }}
+      - name: Ensure PR version is new
+        if: github.event_name == 'pull_request' && steps.needs-release.outputs.exists == 'true'
+        run: |
+          echo "Version v${{ steps.version.outputs.version }} already exists. Update the version before merging this PR."
+          exit 1
       - name: Generate attestation
         id: attest
         uses: actions/attest@v4
