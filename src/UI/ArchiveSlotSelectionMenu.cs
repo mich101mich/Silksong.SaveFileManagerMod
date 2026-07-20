@@ -26,7 +26,30 @@ public partial class ArchiveSlotSelectionMenu : MonoBehaviour
 
     public void OnDestroy()
     {
-        Close();
+        if (m_screen != null)
+        {
+            m_screen.Dispose();
+            m_screen = null;
+        }
+
+        if (m_openRoutine != null)
+        {
+            StopCoroutine(m_openRoutine);
+            m_openRoutine = null;
+        }
+        if (m_closeRoutine != null)
+        {
+            StopCoroutine(m_closeRoutine);
+            m_closeRoutine = null;
+        }
+
+        if (IsOpen || m_isClosing)
+        {
+            IsOpen = false;
+            m_isClosing = false;
+            var ui = UIManager.instance;
+            ui.StartCoroutine(ui.GoToProfileMenu()); // Note: Make sure to start the coroutine on UI, because this object is being destroyed
+        }
     }
 
     public void OpenForSlot(SaveSlotButton slot)
