@@ -17,6 +17,11 @@ on:
         required: true
         default: false
         type: boolean
+      force_nexus:
+        description: Force re-publishing to Nexus Mods
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -133,6 +138,49 @@ jobs:
             --file thunderstore/dist/*.zip \
             --token $THUNDERSTORE_API_KEY
 
+  # Publish to Nexus Mods so that users can install the mod there
+  release-nexus:
+    needs:
+      - build
+      - secret-check
+    runs-on: ubuntu-latest
+    if: |
+      needs.secret-check.outputs.has-nexus-secret == 'true' &&
+      (
+        (
+          github.event_name == 'push' &&
+          needs.build.outputs.allow-release == 'true' &&
+          needs.build.outputs.is-new-version == 'true'
+        ) ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.force_nexus == 'true'
+        )
+      )
+    env:
+      NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v8
+        with:
+          artifact-ids: ${{ needs.build.outputs.thunderstore-artifact-id }}
+          path: thunderstore/dist
+          skip-decompress: true
+      - name: Publish to Nexus Mods
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.9
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUSMODS_FILE_ID }}
+          filename: thunderstore/dist/*.zip
+          version: ${{ needs.build.outputs.version }}
+          display_name: SaveFileManagerMod ${{ needs.build.outputs.version }}
+          category: main
+          archive_existing_version: true
+          primary_mod_manager_download: true
+          allow_mod_manager_download: true
+          update_mod_version: true
+
   # Publish to NuGet so that other mods can depend on it in CI
   release-nuget:
     needs:
@@ -205,5 +253,6 @@ jobs:
     outputs:
       has-nuget-secret: ${{ secrets.NUGET_API_KEY != '' }}
       has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
+      has-nexus-secret: ${{ secrets.NEXUSMODS_API_KEY != '' && vars.NEXUSMODS_FILE_ID != '' }}
     steps:
       - run: echo no-op
