@@ -177,7 +177,7 @@ jobs:
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           file_id: ${{ vars.NEXUSMODS_FILE_ID }}
-          filename: thunderstore/dist/*.zip
+          filename: thunderstore/dist/mich101mich-SaveFileManagerMod-${{ needs.get-version.outputs.version }}.zip
           version: ${{ needs.get-version.outputs.version }}
           display_name: SaveFileManagerMod ${{ needs.get-version.outputs.version }}
           category: main
