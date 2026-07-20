@@ -149,6 +149,8 @@ public sealed class ArchiveMenuScreen : IDisposable
         entry.Container.transform.SetParent(m_content, false);
         entry.Container.SetActive(true);
 
+        var eventTrigger = entry.MenuButton.gameObject.AddComponent<EventTrigger>()!;
+
         var onSelectListener = new EventTrigger.Entry();
         onSelectListener.eventID = EventTriggerType.Select;
         onSelectListener.callback.AddListener((data) =>
@@ -170,18 +172,24 @@ public sealed class ArchiveMenuScreen : IDisposable
             // Also prevent cursor select so that we don't get weird double selections
             UIManager.instance.inputModule.focusOnMouseHover = false;
         });
-
-        var onScrollListener = new EventTrigger.Entry();
-        onScrollListener.eventID = EventTriggerType.Scroll;
-        onScrollListener.callback.AddListener((data) =>
-        {
-            // Send the event to the scroll rect, because having an EventTrigger intercepts all events and stops propagation
-            ExecuteEvents.ExecuteHierarchy(m_scrollRect.gameObject, (PointerEventData)data, ExecuteEvents.scrollHandler);
-        });
-
-        var eventTrigger = entry.MenuButton.gameObject.AddComponent<EventTrigger>()!;
         eventTrigger.triggers.Add(onSelectListener);
-        eventTrigger.triggers.Add(onScrollListener);
+
+        // Having an EventTrigger blocks all events from propagating, so we manually forward relevant events to the ScrollRect
+        var eventMappings = new (EventTriggerType, Action<PointerEventData>)[]
+        {
+            (EventTriggerType.Scroll, m_scrollRect.OnScroll),
+            (EventTriggerType.Drag, m_scrollRect.OnDrag),
+            (EventTriggerType.BeginDrag, m_scrollRect.OnBeginDrag),
+            (EventTriggerType.EndDrag, m_scrollRect.OnEndDrag),
+            (EventTriggerType.InitializePotentialDrag, m_scrollRect.OnInitializePotentialDrag)
+        };
+        foreach (var (eventType, callback) in eventMappings)
+        {
+            var listener = new EventTrigger.Entry();
+            listener.eventID = eventType;
+            listener.callback.AddListener(data => callback((PointerEventData)data));
+            eventTrigger.triggers.Add(listener);
+        }
 
         UpdateLayout();
     }
