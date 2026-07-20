@@ -255,4 +255,8 @@ jobs:
       has-thunderstore-secret: ${{ secrets.THUNDERSTORE_API_KEY != '' }}
       has-nexus-secret: ${{ secrets.NEXUSMODS_API_KEY != '' && vars.NEXUSMODS_FILE_ID != '' }}
     steps:
-      - run: echo no-op
+      - run: |
+          [[ -n "${{ secrets.NUGET_API_KEY }}" ]] && echo "NUGET_API_KEY is set" || echo "NUGET_API_KEY is not set"
+          [[ -n "${{ secrets.THUNDERSTORE_API_KEY }}" ]] && echo "THUNDERSTORE_API_KEY is set" || echo "THUNDERSTORE_API_KEY is not set"
+          [[ -n "${{ secrets.NEXUSMODS_API_KEY }}" ]] && echo "NEXUSMODS_API_KEY is set" || echo "NEXUSMODS_API_KEY is not set"
+          [[ -n "${{ vars.NEXUSMODS_FILE_ID }}" ]] && echo "NEXUSMODS_FILE_ID is set" || echo "NEXUSMODS_FILE_ID is not set"
