@@ -181,7 +181,6 @@ jobs:
           version: ${{ needs.get-version.outputs.version }}
           display_name: SaveFileManagerMod ${{ needs.get-version.outputs.version }}
           category: main
-          archive_existing_version: true
           primary_mod_manager_download: true
           allow_mod_manager_download: true
           update_mod_version: true
