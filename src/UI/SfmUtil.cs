@@ -38,6 +38,10 @@ public static class SfmUtil
         {
             UnityEngine.Object.Destroy(component);
         }
+        else
+        {
+            SfmLogger.LogWarning($"RemoveComponent: Could not find component '{typeof(T).Name}' in '{gameObject.name}'");
+        }
     }
 
     public static void RemoveComponentImmediate<T>(GameObject gameObject) where T : Component
@@ -46,6 +50,10 @@ public static class SfmUtil
         if (component != null)
         {
             UnityEngine.Object.DestroyImmediate(component);
+        }
+        else
+        {
+            SfmLogger.LogWarning($"RemoveComponentImmediate: Could not find component '{typeof(T).Name}' in '{gameObject.name}'");
         }
     }
 

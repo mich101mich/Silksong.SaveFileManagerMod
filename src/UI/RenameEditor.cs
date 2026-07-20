@@ -152,8 +152,6 @@ public class RenameEditor : IDisposable
         input.SetActive(false);
         input.name = "SFM-RenameEditor";
 
-        SfmUtil.RemoveComponent<EventTrigger>(input);
-        SfmUtil.RemoveComponent<FixVerticalAlign>(input);
         SfmUtil.RemoveComponent<MenuSetting>(input);
         UnityEngine.Object.Destroy(SfmUtil.GetChild(input, "Menu Option Label"));
         UnityEngine.Object.Destroy(SfmUtil.GetChild(input, "Description"));

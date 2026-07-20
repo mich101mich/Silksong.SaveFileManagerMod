@@ -22,8 +22,6 @@ A Hollow Knight: Silksong mod. Adds buttons to name and archive save files.
 ## Dependencies
 
 - [BepInEx]
-- [DataManager]
-- [ModMenu]
 - [I18N] (optional)
   - The mod will be displayed in english by default. If I18N is installed, additional languages will be available.
   - Note that currently, only english and german were checked by a human. The remaining languages are MTL/AI.
@@ -47,5 +45,3 @@ of the plugins folder.
 [More Saves]: https://thunderstore.io/c/hollow-knight-silksong/p/Clazex/MoreSaves/
 [BepInEx]: https://thunderstore.io/c/hollow-knight-silksong/p/silksong_modding/BepInExPack_Silksong/
 [I18N]: https://thunderstore.io/c/hollow-knight-silksong/p/silksong_modding/I18N/
-[ModMenu]: https://thunderstore.io/c/hollow-knight-silksong/p/silksong_modding/ModMenu/
-[DataManager]: https://thunderstore.io/c/hollow-knight-silksong/p/silksong_modding/DataManager/

@@ -1,18 +1,16 @@
 using System;
-using System.Collections;
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using Silksong.ModMenu.Elements;
 using TeamCherry.Localization;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
 
-public partial class ArchiveMenuEntry : TextButton
+public partial class ArchiveMenuEntry : IDisposable
 {
-    public static readonly float SLOT_TEXT_HEIGHT = SpacingConstants.VSPACE_SMALL;
+    public static readonly float SLOT_TEXT_HEIGHT = 70f;
     public static readonly float SLOT_PREVIEW_HEIGHT = 140f;
     public static readonly float SLOT_TOTAL_HEIGHT = SLOT_TEXT_HEIGHT + SLOT_PREVIEW_HEIGHT;
 
@@ -21,10 +19,72 @@ public partial class ArchiveMenuEntry : TextButton
     public SaveProfileHealthBar? m_healthSlots;
     public SaveProfileSilkBar? m_silkBar;
 
+    public readonly GameObject Container;
+    public readonly MenuButton MenuButton;
+    public readonly Text ButtonText;
+    public readonly Text DescriptionText;
+
+    public Action? OnSubmit;
+
+    private bool m_disposed;
+
     public ArchiveMenuEntry(int slotIndex, SaveStats? stats, string? message, SaveSlotButton template)
-        : base(Init(slotIndex, stats, message), message ?? "")
     {
-        base.Container.name = $"SFM-ArchiveSaveSlot";
+        var canvas = SfmUtil.GetChild(UIManager.instance.gameObject, "UICanvas")!;
+        var source = SfmUtil.GetChild(canvas, "OptionsMenuScreen/Content/GameOptions")!;
+        Container = UnityEngine.Object.Instantiate(source, source.transform.parent, false);
+        Container.name = "SFM-ArchiveSaveSlot";
+        Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
+
+        var button = SfmUtil.GetChild(Container, "GameOptionsButton")!;
+        button.name = "SFM-ArchiveSaveSlot-Inner";
+        SfmUtil.RemoveComponent<AutoLocalizeTextUI>(button);
+        SfmUtil.RemoveComponent<EventTrigger>(button);
+
+        var textObject = SfmUtil.GetChild(button, "Menu Button Text")!;
+        textObject.name = "SFM-SaveSlotName";
+        SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(textObject);
+        SfmUtil.RemoveComponent<ContentSizeFitter>(textObject);
+
+        var nameTransform = textObject.GetComponent<RectTransform>()!;
+        nameTransform.pivot = new Vector2(0.5f, 1f);
+        nameTransform.anchorMin = new Vector2(0.5f, 1f);
+        nameTransform.anchorMax = new Vector2(0.5f, 1f);
+        nameTransform.anchoredPosition = new Vector2(0f, 0f);
+        nameTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TEXT_HEIGHT);
+
+        ButtonText = textObject.GetComponent<Text>()!;
+        ButtonText.text = Init(slotIndex, stats, message);
+        ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
+
+        var descriptionSource = SfmUtil.GetChild(canvas, "GameOptionsMenuScreen/Content/CamShakeSetting/CamShakePopupOption/Description")!;
+        var descriptionObject = UnityEngine.Object.Instantiate(descriptionSource, button.transform, false);
+        descriptionObject.name = message != null ? "SFM-SaveSlotDescription" : "SFM-SaveSlotPreview";
+        SfmUtil.RemoveComponent<ChangeTextFontScaleOnHandHeld>(descriptionObject);
+
+        DescriptionText = descriptionObject.GetComponent<Text>()!;
+        DescriptionText.text = message ?? "";
+        DescriptionText.alignment = TextAnchor.MiddleCenter;
+
+        var descriptionTransform = descriptionObject.GetComponent<RectTransform>()!;
+        descriptionTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        descriptionTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        descriptionTransform.pivot = new Vector2(0.5f, 0.5f);
+
+        MenuButton = button.GetComponent<MenuButton>()!;
+        MenuButton.buttonType = MenuButton.MenuButtonType.Activate;
+        MenuButton.descriptionText = descriptionObject.GetComponent<Animator>()!;
+
+        MenuButton.OnSubmitPressed = new UnityEvent();
+        if (message == null)
+        {
+            MenuButton.OnSubmitPressed.AddListener(() => OnSubmit?.Invoke());
+        }
+
+        if (message != null || stats == null)
+        {
+            return;
+        }
 
         // Layout:
         // +-------------------------------------------------------------------------------+ ---
@@ -34,46 +94,29 @@ public partial class ArchiveMenuEntry : TextButton
         // |     [     ]                         S 800     The Abyss                       |  |
         // +-------------------------------------------------------------------------------+ ---
 
-        base.Container.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
-
-        var textButton = SfmUtil.GetChild(base.Container, "TextButton")!;
-        textButton.name = "SFM-ArchiveSaveSlot-Inner";
-        textButton.GetComponent<RectTransform>()!.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TOTAL_HEIGHT);
-
-        var nameText = base.ButtonText.gameObject;
-        nameText.name = "SFM-SaveSlotName";
-
-        SfmUtil.RemoveComponent<ContentSizeFitter>(nameText);
-
-        // Name: Top-Aligned against the parent, full width.
-        var nameTransform = nameText.GetComponent<RectTransform>()!;
-        nameTransform.pivot = new Vector2(0.5f, 1f);
-        nameTransform.anchorMin = new Vector2(0.5f, 1f);
-        nameTransform.anchorMax = new Vector2(0.5f, 1f);
-        nameTransform.anchoredPosition = new Vector2(0f, 0f);
-        nameTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_TEXT_HEIGHT);
-
-        base.ButtonText.alignment = TextAnchor.MiddleLeft; // We made the slot wider, so the text should no longer be centered.
-
-        var preview = base.DescriptionText.gameObject; // Put the decorations in the place where the description text would normally go
-        preview.name = "SFM-SaveSlotPreview";
-
-        if (message != null || stats == null)
-        {
-            return;
-        }
-
-        SfmUtil.RemoveComponent<ChangePositionByLanguage>(preview);
+        SfmUtil.RemoveComponent<ChangePositionByLanguage>(descriptionObject);
 
         // Preview: Top-Aligned against the parent but below the name text, full width.
-        var previewTransform = preview.GetComponent<RectTransform>()!;
+        var previewTransform = descriptionObject.GetComponent<RectTransform>()!;
         previewTransform.pivot = new Vector2(0.5f, 1f);
         previewTransform.anchorMin = new Vector2(0.5f, 1f);
         previewTransform.anchorMax = new Vector2(0.5f, 1f);
         previewTransform.anchoredPosition = new Vector2(0f, -SLOT_TEXT_HEIGHT); // Below the text
         previewTransform.sizeDelta = new Vector2(SLOT_WIDTH, SLOT_PREVIEW_HEIGHT);
 
-        CloneSaveSlotElements(preview, slotIndex, stats, template);
+        CloneSaveSlotElements(descriptionObject, slotIndex, stats, template);
+    }
+
+    public void Dispose()
+    {
+        if (m_disposed)
+        {
+            return;
+        }
+
+        m_disposed = true;
+        MenuButton.OnSubmitPressed.RemoveAllListeners();
+        UnityEngine.Object.Destroy(Container);
     }
 
     public static string Init(int slotIndex, SaveStats? stats, string? message)

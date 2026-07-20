@@ -51,14 +51,14 @@ public class SaveName
         var nameFilePath = GetNameFilePath(slotIndex);
         try
         {
-            var baseDir = Silksong.DataManager.DataPaths.SaveDataDir(slotIndex);
+            var baseDir = Path.GetDirectoryName(nameFilePath);
             Directory.CreateDirectory(baseDir);
             File.WriteAllText(nameFilePath, normalized);
             SfmLogger.LogInfo($"Saved name \"{normalized}\" for slot {slotIndex} to {nameFilePath}");
         }
         catch (Exception ex)
         {
-            SfmLogger.LogInfo($"Error saving name for slot {slotIndex} to {nameFilePath}: {ex.Message}");
+            SfmLogger.LogError($"Error saving name for slot {slotIndex} to {nameFilePath}: {ex.Message}");
         }
     }
 
@@ -86,7 +86,30 @@ public class SaveName
         }
         catch (Exception ex)
         {
-            SfmLogger.LogInfo($"Error loading name for slot {slotIndex} from {nameFilePath}: {ex.Message}");
+            SfmLogger.LogError($"Error loading name for slot {slotIndex} from {nameFilePath}: {ex.Message}");
+        }
+
+        var legacyNameFilePath = GetLegacyNameFilePath(slotIndex);
+        try
+        {
+            string name = System.IO.File.ReadAllText(legacyNameFilePath).Trim();
+            Names[slotIndex] = name;
+            SfmLogger.LogInfo($"Loaded legacy name \"{name}\" for slot {slotIndex}");
+            SetSlotName(slotIndex, name); // Save to new location
+            System.IO.File.Delete(legacyNameFilePath); // Delete old location
+            return;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // ok, no name saved yet
+        }
+        catch (FileNotFoundException)
+        {
+            // ok, no name saved yet
+        }
+        catch (Exception ex)
+        {
+            SfmLogger.LogError($"Error loading legacy name for slot {slotIndex} from {legacyNameFilePath}: {ex.Message}");
         }
 
         Names[slotIndex] = string.Empty;
@@ -96,14 +119,20 @@ public class SaveName
     {
         Names[slotIndex] = string.Empty;
 
-        // Deleting is handled by the DataManager mod, which deletes the entire save slot directory when a save is erased.
-        // This entire function is technically not necessary, since the next refresh will call ReloadSlot, which will simply
-        // clear the name since the file is missing, but this is the safer way to ensure the name is cleared.
-
         var nameFilePath = GetNameFilePath(slotIndex);
         try
         {
             File.Delete(nameFilePath);
+        }
+        catch (Exception)
+        {
+            // Ignore and let DataManager handle the deletion
+        }
+
+        var legacyNameFilePath = GetLegacyNameFilePath(slotIndex);
+        try
+        {
+            File.Delete(legacyNameFilePath);
         }
         catch (Exception)
         {
@@ -121,7 +150,20 @@ public class SaveName
         // Note that we don't use the DataManager API for storing this save-file-specific data, because that only loads
         // data when you load into a save, not when you open the save select menu.
 
-        var baseDir = Silksong.DataManager.DataPaths.SaveDataDir(slotIndex);
-        return System.IO.Path.Combine(baseDir, "sfm_save_name.txt.dat"); // .dat extension to get cloud sync, which globs for all .dat files.
+        var rootDir = SaveArchive.GetModdedSaveDataDir(slotIndex);
+        return Path.Combine(rootDir, "sfm_save_name.txt.dat"); // .dat extension to get cloud sync, which globs for all .dat files.
+    }
+
+    /// <summary>
+    /// Gets the old file path for the name of a save slot.
+    /// </summary>
+    /// <param name="slotIndex">The index of the save slot.</param>
+    /// <returns>The file path for the name of the save slot.</returns>
+    public static string GetLegacyNameFilePath(int slotIndex)
+    {
+        // This was the path used in the first version of this mod, but it was changed so that the file would not be confused with
+        // the DataManager mod's actual save data files.
+        var rootDir = SaveArchive.GetModdedSaveDataDir(slotIndex);
+        return Path.Combine(rootDir, "SaveData", "sfm_save_name.txt.dat");
     }
 }
