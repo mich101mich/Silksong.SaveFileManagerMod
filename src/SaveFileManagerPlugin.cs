@@ -38,6 +38,7 @@ public class SfmLogger
 };
 
 [BepInAutoPlugin(id: "io.github.mich101mich.savefilemanagermod")]
+[BepInDependency("org.silksong-modding.i18n", BepInDependency.DependencyFlags.SoftDependency)]
 public partial class SaveFileManagerPlugin : BaseUnityPlugin
 {
     public static SaveFileManagerPlugin s_instance = null!;
