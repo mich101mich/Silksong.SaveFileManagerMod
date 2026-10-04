@@ -3,8 +3,6 @@ using BepInEx.Logging;
 using HarmonyLib;
 using SaveFileManagerMod.UI;
 using System.Collections.Generic;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace SaveFileManagerMod;
 
@@ -97,30 +95,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         return m_isModCompatible.Value;
     }
 
-    // ================================================================================
-    // Delete/Reinit handling
-    // ================================================================================
-
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(UIManager), nameof(UIManager.UIGoToProfileMenu))]
-    public static void UIManager_UIGoToProfileMenu_Prefix(UIManager __instance)
-    {
-        s_instance.InitUi();
-    }
-
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(UIManager), nameof(UIManager.MakeMenuLean))]
-    public static void UIManager_MakeMenuLean_Prefix(UIManager __instance)
-    {
-        // Called when the player loads into a file. The menu objects are destroyed here to improve performance, so we need to clear our references to them.
-        s_instance.m_saveOptions.Clear();
-    }
-
     public void InitUi()
     {
         if (m_saveOptions.Count > 0)
         {
-            return;
+            return; // Already initialized
         }
 
         if (!IsModCompatible())
@@ -147,80 +126,11 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         }
     }
 
-    // ================================================================================
-    // Load Name Handler
-    // ================================================================================
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.Prepare))]
-    public static void SaveSlotButton_Prepare_Postfix(SaveSlotButton __instance)
+    public void ClearUiReferences()
     {
-        if (!s_instance.IsModCompatible())
-        {
-            return;
-        }
-
-        // Function called on startup and when changing pages with the MoreSaves mod
-        SaveName.ReloadSlot(__instance.SaveSlotIndex);
+        // The objects in the UI are being destroyed, so we need to clear our references to them.
+        // Note that we don't destroy any of the objects that we created. That is handled automatically by Unity
+        // since we created them as components of the UI elements.
+        m_saveOptions.Clear();
     }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(SaveSlotButton), nameof(SaveSlotButton.UpdateSaveFileState))]
-    public static void SaveSlotButton_UpdateSaveFileState_Postfix(SaveSlotButton __instance)
-    {
-        if (!s_instance.IsModCompatible())
-        {
-            return;
-        }
-
-        // Function called when the select profile menu is opened
-        SaveName.ReloadSlot(__instance.SaveSlotIndex);
-    }
-
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(SaveSlotButton), "ChangeSaveFileState")]
-    public static void SaveSlotButton_ChangeSaveFileState_Prefix(SaveSlotButton __instance, SaveSlotButton.SaveFileStates nextSaveFileState)
-    {
-        if (!s_instance.IsModCompatible())
-        {
-            return;
-        }
-
-        if (nextSaveFileState == SaveSlotButton.SaveFileStates.Empty)
-        {
-            // Save was erased, or file is empty/nonexistent. Clear the name for this slot.
-            SaveName.ClearSlot(__instance.SaveSlotIndex);
-        }
-    }
-
-    // ================================================================================
-    // Button Navigation Fixes
-    // ================================================================================
-
-    // Patch: Team Cherry added logic to the ClearSaveButton to automatically move on to the next button when navigating left/right, skipping over disabled buttons.
-    // However, they did not add this logic to the RestoreSaveButton, so this mod's custom button setup breaks.
-
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(Selectable), nameof(Selectable.OnMove))]
-    public static void RestoreSaveButton_OnMove_Prefix(Selectable __instance, AxisEventData eventData, ref bool __runOriginal)
-    {
-        if (__instance is not RestoreSaveButton)
-        {
-            return;
-        }
-
-        if (!__runOriginal)
-        {
-            return; // Another prefix has already handled this event
-        }
-
-        if (SaveSlotActionButton.TryNavigateSkippingDisabled(eventData, __instance))
-        {
-            // we have successfully navigated to a new button => skip original logic
-            __runOriginal = false;
-        }
-        // else: continue with default behavior
-    }
-
-
 }
