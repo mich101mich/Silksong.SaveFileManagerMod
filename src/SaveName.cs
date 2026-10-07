@@ -71,7 +71,7 @@ public class SaveName
         var nameFilePath = GetNameFilePath(slotIndex);
         try
         {
-            string name = System.IO.File.ReadAllText(nameFilePath).Trim();
+            string name = File.ReadAllText(nameFilePath).Trim();
             Names[slotIndex] = name;
             SfmLogger.LogInfo($"Loaded name \"{name}\" for slot {slotIndex}");
             return;
@@ -92,11 +92,11 @@ public class SaveName
         var legacyNameFilePath = GetLegacyNameFilePath(slotIndex);
         try
         {
-            string name = System.IO.File.ReadAllText(legacyNameFilePath).Trim();
+            string name = File.ReadAllText(legacyNameFilePath).Trim();
             Names[slotIndex] = name;
             SfmLogger.LogInfo($"Loaded legacy name \"{name}\" for slot {slotIndex}");
             SetSlotName(slotIndex, name); // Save to new location
-            System.IO.File.Delete(legacyNameFilePath); // Delete old location
+            File.Delete(legacyNameFilePath); // Delete old location
             return;
         }
         catch (DirectoryNotFoundException)

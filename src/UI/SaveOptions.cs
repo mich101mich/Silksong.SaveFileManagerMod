@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace SaveFileManagerMod.UI;
@@ -10,6 +11,7 @@ public class SaveOptions : MonoBehaviour
     public SaveSlotActionRow m_actionRow = null!;
     public ArchiveSlotSelectionMenu m_archiveMenu = null!;
     public RenameEditor m_renameEditor = null!;
+    public int m_editorOpenForSlot = -1;
 
     public Text m_nameLabel = null!;
     public Text m_defeatedNameLabel = null!;
@@ -50,22 +52,30 @@ public class SaveOptions : MonoBehaviour
 
     public void Update()
     {
-        SyncFromSlotState();
+        if (!m_renameEditor.IsOpen)
+        {
+            SyncFromSlotState();
+        }
+        else if (m_editorOpenForSlot != m_saveSlotButton.SaveSlotIndex)
+        {
+            // User pressed the MoreSaves page switch hotkey
+            SfmLogger.LogInfo($"Closing RenameEditor for slot {m_saveSlotButton.SaveSlotIndex} because the slot changed.");
+            m_renameEditor.Close(saveChanges: false, invokeCallback: false);
+            // The buttons might not be present on the new page, so we prevent the OnRenameEditorClosed callback
+            // and manually focus the slot itself.
+            EventSystem.current?.SetSelectedGameObject(m_saveSlotButton.gameObject);
+        }
     }
 
     public void SyncFromSlotState()
     {
-        if (!m_renameEditor.IsOpen)
-        {
-            m_actionRow.Refresh();
+        m_actionRow.Refresh();
 
-            string name;
-            bool hasName = SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out name);
-            m_nameLabel.text = name;
-            m_nameLabel.gameObject.SetActive(hasName);
-            m_defeatedNameLabel.text = name;
-            m_defeatedNameLabel.gameObject.SetActive(hasName);
-        }
+        bool hasName = SaveName.TryGetSlotName(m_saveSlotButton.SaveSlotIndex, out string name);
+        m_nameLabel.text = name;
+        m_nameLabel.gameObject.SetActive(hasName);
+        m_defeatedNameLabel.text = name;
+        m_defeatedNameLabel.gameObject.SetActive(hasName);
     }
 
     public void OpenRenameEditor()
@@ -77,6 +87,7 @@ public class SaveOptions : MonoBehaviour
 
         m_actionRow.SetButtonVisibility(visible: false);
 
+        m_editorOpenForSlot = m_saveSlotButton.SaveSlotIndex;
         m_renameEditor.Open();
     }
 

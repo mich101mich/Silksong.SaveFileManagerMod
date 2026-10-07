@@ -51,13 +51,13 @@ public class SaveSlotActionRow : IDisposable
 
         m_disposed = true;
 
-        UnityEngine.Object.Destroy(m_rename.button.gameObject);
-        UnityEngine.Object.Destroy(m_archive.button.gameObject);
+        UnityEngine.Object.Destroy(m_rename.m_button.gameObject);
+        UnityEngine.Object.Destroy(m_archive.m_button.gameObject);
 
-        m_restore.button.navigation = m_originalRestoreNav;
-        m_restore.button.transform.SetLocalPositionX(-67f);
-        m_clear.button.navigation = m_originalClearNav;
-        m_clear.button.transform.SetLocalPositionX(67f);
+        m_restore.m_button.navigation = m_originalRestoreNav;
+        m_restore.m_button.transform.SetLocalPositionX(-67f);
+        m_clear.m_button.navigation = m_originalClearNav;
+        m_clear.m_button.transform.SetLocalPositionX(67f);
     }
 
     public void Refresh()
@@ -171,7 +171,7 @@ public class SaveSlotActionRow : IDisposable
 
     public void UpdateLayout()
     {
-        List<RectTransform> rects = m_buttons.Where(b => b.canUse).Select(b => b.rectTransform).ToList();
+        List<RectTransform> rects = m_buttons.Where(b => b.m_canUse).Select(b => b.m_rectTransform).ToList();
 
         float spacing = 134f;
         float totalWidth = (rects.Count - 1) * spacing;
@@ -188,20 +188,20 @@ public class SaveSlotActionRow : IDisposable
     {
         for (int i = 0; i < m_buttons.Count; i++)
         {
-            Navigation nav = m_buttons[i].button.navigation;
+            Navigation nav = m_buttons[i].m_button.navigation;
             nav.mode = Navigation.Mode.Explicit;
             nav.selectOnUp = m_slot;
             nav.selectOnDown = m_slot.backButton;
-            nav.selectOnLeft = i > 0 ? m_buttons[i - 1].button : previousRow?.m_clear.button;
-            nav.selectOnRight = i < m_buttons.Count - 1 ? m_buttons[i + 1].button : nextRow?.m_restore.button;
-            m_buttons[i].button.navigation = nav;
+            nav.selectOnLeft = i > 0 ? m_buttons[i - 1].m_button : previousRow?.m_clear.m_button;
+            nav.selectOnRight = i < m_buttons.Count - 1 ? m_buttons[i + 1].m_button : nextRow?.m_restore.m_button;
+            m_buttons[i].m_button.navigation = nav;
         }
 
         // Empty slot normally has no buttons, meaning it navigates to the back button.
         // Defeated slots normally only have a clear button. 
         // We added an archive button, so we need to navigate there instead.
-        m_slot.emptySlotNav = m_slot.emptySlotNav with { selectOnDown = m_archive.button };
-        m_slot.defeatedSlotNav = m_slot.defeatedSlotNav with { selectOnDown = m_archive.button };
+        m_slot.emptySlotNav = m_slot.emptySlotNav with { selectOnDown = m_archive.m_button };
+        m_slot.defeatedSlotNav = m_slot.defeatedSlotNav with { selectOnDown = m_archive.m_button };
     }
 
 }

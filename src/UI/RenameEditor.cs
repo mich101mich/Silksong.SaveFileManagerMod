@@ -74,7 +74,7 @@ public class RenameEditor : IDisposable
         m_rightCursor.SetTrigger(MenuSelectable._showPropId);
     }
 
-    public void Close(bool saveChanges)
+    public void Close(bool saveChanges, bool invokeCallback = true)
     {
         if (!IsOpen)
         {
@@ -101,7 +101,10 @@ public class RenameEditor : IDisposable
 
         IsOpen = false;
         ui.inputModule.focusOnMouseHover = true;
-        m_onCloseCallback?.Invoke();
+        if (invokeCallback)
+        {
+            m_onCloseCallback?.Invoke();
+        }
     }
 
     public IEnumerator FadeInAndSelect()
