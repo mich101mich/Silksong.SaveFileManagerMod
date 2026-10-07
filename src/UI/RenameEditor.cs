@@ -9,11 +9,12 @@ namespace SaveFileManagerMod.UI;
 public class RenameEditor : IDisposable
 {
     public SaveSlotButton m_saveSlotButton;
-    public InputHandler m_inputHandler;
 
-    public InputField m_renameInput;
+    public ControllerFriendlyInputField m_renameInput;
     public Animator m_leftCursor;
     public Animator m_rightCursor;
+
+    public Coroutine? m_fadeCoroutine = null;
 
     public bool IsOpen = false;
 
@@ -22,7 +23,6 @@ public class RenameEditor : IDisposable
     public RenameEditor(SaveSlotButton button, Action onCloseCallback, Action<string> onValueChangedCallback)
     {
         m_saveSlotButton = button;
-        m_inputHandler = GameManager.instance.inputHandler;
 
         m_onCloseCallback = onCloseCallback;
 
@@ -66,7 +66,12 @@ public class RenameEditor : IDisposable
         var ui = UIManager.instance;
         ui.inputModule.focusOnMouseHover = false;
 
-        ui.StartCoroutine(FadeInAndSelect());
+        if (m_fadeCoroutine != null)
+        {
+            ui.StopCoroutine(m_fadeCoroutine);
+        }
+
+        m_fadeCoroutine = ui.StartCoroutine(FadeInAndSelect());
 
         m_leftCursor.ResetTrigger(MenuSelectable._hidePropId);
         m_leftCursor.SetTrigger(MenuSelectable._showPropId);
@@ -93,13 +98,21 @@ public class RenameEditor : IDisposable
             ui.uiAudioPlayer.PlayCancel();
         }
 
-        ui.StartCoroutine(FadeOut());
+        if (m_fadeCoroutine != null)
+        {
+            ui.StopCoroutine(m_fadeCoroutine);
+            m_fadeCoroutine = null;
+        }
+
+        m_fadeCoroutine = ui.StartCoroutine(FadeOut());
+
         m_leftCursor.ResetTrigger(MenuSelectable._showPropId);
         m_leftCursor.SetTrigger(MenuSelectable._hidePropId);
         m_rightCursor.ResetTrigger(MenuSelectable._showPropId);
         m_rightCursor.SetTrigger(MenuSelectable._hidePropId);
 
         IsOpen = false;
+        m_renameInput.DeactivateInputField();
         ui.inputModule.focusOnMouseHover = true;
         if (invokeCallback)
         {
@@ -141,7 +154,7 @@ public class RenameEditor : IDisposable
         m_renameInput.gameObject.SetActive(false);
     }
 
-    public static InputField BuildTextInput(SaveSlotButton saveSlotButton, out Animator leftCursor, out Animator rightCursor)
+    public static ControllerFriendlyInputField BuildTextInput(SaveSlotButton saveSlotButton, out Animator leftCursor, out Animator rightCursor)
     {
         RectTransform slotRect = saveSlotButton.GetComponent<RectTransform>();
         RectTransform actionRowRect = saveSlotButton.clearSaveButton.GetComponent<RectTransform>();
@@ -177,7 +190,7 @@ public class RenameEditor : IDisposable
         text.alignment = TextAnchor.MiddleRight;
         text.lineSpacing = 1f;
 
-        var textInputField = input.AddComponent<InputField>();
+        var textInputField = input.AddComponent<ControllerFriendlyInputField>();
         textInputField.textComponent = text;
         textInputField.caretColor = Color.white;
         textInputField.contentType = InputField.ContentType.Standard;
