@@ -69,6 +69,8 @@ public partial class SaveFileManagerPlugin : BaseUnityPlugin
         }
         m_saveOptions.Clear();
 
+        SetBackButtonNavigation(); // reset the back button's navigation to the default
+
         s_instance = null!;
         SfmLogger._logger = null;
     }
